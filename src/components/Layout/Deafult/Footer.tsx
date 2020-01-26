@@ -1,12 +1,31 @@
 import * as React from 'react';
+import { makeStyles, Typography, Link, Container } from '@material-ui/core';
 
-export interface IFooterProps {
+function Copyright() {
+  return (
+    <Typography variant="body2" color="textSecondary">
+      {'Copyright © '}
+      <Link color="inherit" href="https://github.com/ivankhm">
+        ivankhm
+      </Link>{' '}
+      {new Date().getFullYear()}
+      {'.'}
+    </Typography>
+  );
 }
 
-export default function Footer (props: IFooterProps) {
+export interface IFooterProps {
+  classes: string
+}
+
+export default function Footer(props: IFooterProps) {
+  
   return (
-    <div>
-      Footer!
-    </div>
+    <footer className={props.classes}>
+      <Container maxWidth="md">
+        <Typography variant="body1">Это Ванька сделал</Typography>
+        <Copyright />
+      </Container>
+    </footer>
   );
 }

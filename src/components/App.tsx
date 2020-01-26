@@ -1,10 +1,13 @@
 import React, { FC, } from 'react';
 import LayoutDefault from './Layout/Deafult'
+import Potfolios from './Portfolios'
 
 const App: FC = () => {
   return <div>
     <LayoutDefault>
-      <h1>Virtual Investor App</h1>
+      
+      <Potfolios/>
+
     </LayoutDefault>
   </div>
     ;

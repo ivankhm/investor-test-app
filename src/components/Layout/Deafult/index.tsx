@@ -3,29 +3,52 @@ import Footer from './Footer'
 import Header from './Header'
 import { CssBaseline, Container } from '@material-ui/core'
 
-import { createMuiTheme, ThemeProvider  } from "@material-ui/core/styles";
+import { createMuiTheme, ThemeProvider, makeStyles } from "@material-ui/core/styles";
 import { ruRU } from '@material-ui/core/locale';
+import { sizing } from '@material-ui/system';
 
+//локализация
 const theme = createMuiTheme({}, ruRU);
 
-interface Props {
+const useStyles = makeStyles(theme => ({
+    root: {
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+    },
+    main: {
+        marginTop: theme.spacing(8),
+        marginBottom: theme.spacing(2)
+    }, 
+    footer: {
+        padding: theme.spacing(3, 2),
+        marginTop: 'auto',
+        backgroundColor:
+          theme.palette.type === 'dark' ? theme.palette.grey[800] : theme.palette.grey[200],
+      }
+}));
+
+interface ILayoutDefaultProps {
     children: ReactNode
 }
 
-export default class LayoutDefault extends Component<Props> {
-    render() {
-        return (
-            <div>
-                <ThemeProvider theme={theme} >
-                    <CssBaseline />
-                    <Container maxWidth="md" >
-                        <Header />
-                        {this.props.children}
-                        <Footer />
-                    </Container>
-                </ThemeProvider >
+export default function LayoutDefault(props: ILayoutDefaultProps) {
+    const classes = useStyles();
 
-            </div>
-        )
-    }
+    return (
+        <div className={classes.root}>
+            <ThemeProvider theme={theme} >
+                <CssBaseline />
+                <Header title="Инвестор пoнapoшкy" />
+                <Container className={classes.main} maxWidth="md" >
+
+                    {props.children}
+
+                </Container>
+                <Footer classes={classes.footer}/>
+            </ThemeProvider >
+        </div>
+
+    )
+
 }

@@ -1,6 +1,7 @@
 import React, { FC, Fragment } from 'react'
 import { Tabs, Tab, Paper, AppBar, Box, TextField, Button, Grid, Container, TableContainer, Table, TableHead, TableRow, TableCell, TableBody } from '@material-ui/core';
 import Autocomplete from '@material-ui/lab/Autocomplete';
+import { useSelector } from 'react-redux'
 
 interface Props {
 
@@ -19,6 +20,7 @@ const rows = [
 ];
 
 const Portfolios: FC<Props> = () => {
+    const currentState = useSelector(state => state);
 
     const [value, setValue] = React.useState(0);
 

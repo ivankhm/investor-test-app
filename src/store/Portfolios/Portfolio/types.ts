@@ -19,7 +19,7 @@ export interface StockItem {
 
 
 
-export interface Portfolio {
+export interface IPortfolioState {
     id: string,
     name: string,
     savedItems: StockItem[],

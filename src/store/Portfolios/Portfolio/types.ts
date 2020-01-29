@@ -1,14 +1,31 @@
-import { StockItem } from "./StockItem/types";
+
+export type Currrency = 'usd' | 'rub'
+
+export interface StockItem {
+    name: string,
+    symbol: string,
+
+    amount: number,
+
+    currentPrice: number,
+    marketValue: number,
+
+    deltaP: string, //процент изменения в виде строки ы
+    currency: Currrency, //а надо ли?
+
+    isFetching: boolean
+    //возможно лучше на что-то поменять, но Date сохранить нельзя вродь
+}
+
 
 
 export interface Portfolio {
-    id: number,
+    id: string,
     name: string,
     savedItems: StockItem[],
     marketValue: number,
     deltaP: number,
 
     lastUpdated: number,
-    isFetching: boolean,
-    didInvalidate: boolean
+    isFetching: boolean
 }

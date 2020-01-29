@@ -1,5 +1,5 @@
-import { StockItem } from "../store/Portfolios/Portfolio/StockItem/types";
 import { RawStockItem } from "../api/AlphaAdvantageApi/types";
+import { StockItem } from "../store/Portfolios/Portfolio/types";
 
 export function updateStockItemFromRaw(item: StockItem, {'Global Quote': raw}: RawStockItem): StockItem {
 

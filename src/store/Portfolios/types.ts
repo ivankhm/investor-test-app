@@ -1,6 +1,6 @@
 import { IPortfolioState } from "./Portfolio/types";
 
-export interface Portfolios {
-    selectedPortfolio: string,
+export interface IPortfoliosState {
+    currentPortfolioId: string,
     list: IPortfolioState[]
 }

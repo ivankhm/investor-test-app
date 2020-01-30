@@ -3,14 +3,10 @@ import LayoutDefault from './Layout/Deafult'
 import Potfolios from './Portfolios'
 
 const App: FC = () => {
-  return <div>
+  return (
     <LayoutDefault>
-      
-      <Potfolios/>
-
-    </LayoutDefault>
-  </div>
-    ;
+      <Potfolios />
+    </LayoutDefault>);
 }
 
 export default App;

@@ -2,6 +2,7 @@ import React, { FC, Fragment } from 'react'
 import { Tabs, Tab, Paper, AppBar, Box, TextField, Button, Grid, Container, TableContainer, Table, TableHead, TableRow, TableCell, TableBody } from '@material-ui/core';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import { useSelector } from 'react-redux'
+import CreatePorfolioForm from './CreatePorfolioForm';
 
 interface Props {
 
@@ -38,23 +39,7 @@ const Portfolios: FC<Props> = () => {
             spacing={2}
         >
             <Grid item>
-                <Paper>
-                    <Grid
-                        container
-                        justify="flex-start"
-                        alignItems="center"
-                        spacing={2}
-                    >
-                        <Grid style={{ marginLeft: 8 }} item>
-                            <TextField style={{ width: 300 }} size="small" label="Название нового портфолио" variant="outlined" />
-
-                        </Grid>
-                        <Grid item>
-                            <Button variant="contained" size="medium" color="primary">Создать</Button>
-
-                        </Grid>
-                    </Grid>
-                </Paper>
+                <CreatePorfolioForm />
             </Grid>
 
             <Grid item>

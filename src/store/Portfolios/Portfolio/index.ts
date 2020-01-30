@@ -1,6 +1,5 @@
 import { createSlice, PayloadAction, ThunkAction, Action } from "@reduxjs/toolkit";
 import { IPortfolioState, Currrency, StockItem } from './types'
-import * as AlphaAdvantageApi from '../../../api/AlphaAdvantageApi';
 
 
 import uuid from 'uuid/v4'
@@ -32,7 +31,7 @@ export function saveStockItem(state: IPortfolioState, payload: StockItem) {
     state.savedItems.push(payload);
 };
 
-export function updateStockItem({ savedItems }: IPortfolioState, payload: RawStockItem) {
+export function recieveStockItemUpdate({ savedItems }: IPortfolioState, payload: RawStockItem) {
     //todo: чекнуть работает ли 
     let oldItemIndex = savedItems.findIndex(v => v.symbol === payload["Global Quote"]["01. symbol"]);
 
@@ -40,10 +39,9 @@ export function updateStockItem({ savedItems }: IPortfolioState, payload: RawSto
     newStockItem.isFetching = false;
 
     savedItems[oldItemIndex] = newStockItem;
-
 };
 
-export function requestPortfolioUpdate(state: IPortfolioState, payload: string) {
+export function requestPortfolioUpdate(state: IPortfolioState) {
     state.isFetching = true;
     state.savedItems.forEach(v => v.isFetching = true);
 };

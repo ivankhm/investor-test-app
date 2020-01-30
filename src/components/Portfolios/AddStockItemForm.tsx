@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { RawSearchMatch } from '../../api/AlphaAdvantageApi/types';
-import { Paper, Grid, TextField, Button, CircularProgress } from '@material-ui/core';
+import { Paper, Grid, TextField, Button, CircularProgress, Typography } from '@material-ui/core';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import { getSymbolSearch } from '../../api/AlphaAdvantageApi';
 
@@ -11,7 +11,7 @@ interface Props {
 const AddStockItemForm: React.FC<Props> = () => {
 
     const [typingTimeout, setTypingTimeout] = useState<number>(0);
-
+    const [amount, setAmount] = useState(0)
     const [inputValue, setInputValue] = useState('');
     const [searchMatches, setSearchMatches] = useState<RawSearchMatch[]>([]);
     const [selectedValue, setSelectedValue] = useState<RawSearchMatch | null>(null);
@@ -36,11 +36,11 @@ const AddStockItemForm: React.FC<Props> = () => {
             async () => {
                 setLoading(true);
                 let { data } = await getSymbolSearch(inputValue);
-    
+
                 if (active) {
                     setSearchMatches(data.bestMatches || []);
                 }
-    
+
                 setLoading(false);
             },
             500
@@ -63,8 +63,9 @@ const AddStockItemForm: React.FC<Props> = () => {
                 justify="flex-start"
                 alignItems="center"
                 spacing={2}
+                style={{ margin: 4 }} 
             >
-                <Grid style={{ marginLeft: 8 }} item>
+                <Grid item>
                     <Autocomplete
                         id="combo-box-demo"
 
@@ -83,6 +84,7 @@ const AddStockItemForm: React.FC<Props> = () => {
                         style={{ width: 300 }}
                         renderInput={params => (
                             <TextField {...params}
+                                size="small"
                                 label="Добавить по названию" variant="outlined" fullWidth
                                 onChange={e => setInputValue(e.target.value)}
                                 InputProps={{
@@ -100,8 +102,25 @@ const AddStockItemForm: React.FC<Props> = () => {
                     />
                 </Grid>
                 <Grid item>
-                    <Button variant="contained" size="medium" color="primary">Создать</Button>
+                    <TextField
+                        style={{ width: 300 }}
+                        size="small"
+                        label="Колличество"
+                        type="number"
+                        variant="outlined"
+                        required
+                        value={amount}
+                        onChange={e => setAmount(Number(e.target.value))}
+                    />
 
+                </Grid>
+                <Grid item>
+                    <Typography variant='h6'>
+                        Общая стоимость: {amount}
+                    </Typography>
+                </Grid>
+                <Grid item>
+                    <Button variant="contained" size="medium" color="primary">Создать</Button>
                 </Grid>
             </Grid>
         </Paper>

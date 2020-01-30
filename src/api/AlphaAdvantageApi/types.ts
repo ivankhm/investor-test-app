@@ -2,7 +2,7 @@ export type ApiFunction = 'GLOBAL_QUOTE' | 'SYMBOL_SEARCH';
 
 export interface IApiParams {
     function: ApiFunction,
-    apiKey: string
+    apikey: string
     //datatype?: 'json' | 'csv'
 }
 

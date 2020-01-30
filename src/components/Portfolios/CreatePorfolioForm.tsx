@@ -3,9 +3,6 @@ import { Paper, Grid, TextField, Button } from '@material-ui/core'
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../../store';
 
-
-
-
 import { createPortfolio } from '../../store/Portfolios'
 
 interface Props {

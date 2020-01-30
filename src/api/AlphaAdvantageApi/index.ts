@@ -4,13 +4,13 @@ import { ApiParams, GlobalQuoteParams, RawStockItem, SymbolSearchParams, RawSear
 
 
 const config = {
-    apiKey: '39LS35EIWF828AET',
+    apikey: '39LS35EIWF828AET',
     apiRoot: 'https://www.alphavantage.co/query'
 }
 
 function executeFuntion<T>(params: ApiParams) {
     //хз
-    params.apiKey = config.apiKey;
+    params.apikey = config.apikey;
     return axios.get<T>(config.apiRoot, { params });
 }
 

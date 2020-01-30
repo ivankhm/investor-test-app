@@ -79,7 +79,7 @@ export const { createPortfolio, selectCurrentPortfolio, saveStockItem, recieveSt
 export const fetchCurrentPortfolio =
     (): ThunkAction<void, RootState, null, Action<string>> =>
         async (dispatch, getState) => {
-            let state = getState().portfoliosReducer;
+            let state = getState().portfolios;
             let { savedItems, marketValue } = getSelectedPortfolio(state);
 
             //включить спинер что мы обновляем

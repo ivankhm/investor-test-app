@@ -48,3 +48,10 @@ export interface RawSearchMatch {
 export interface RawSearchResult {
     bestMatches: RawSearchMatch[]
 }
+
+export interface WarningResult {
+    Note: string
+}
+
+export type GlobalQuoteResult =  RawStockItem | WarningResult;
+export type SymbolSearchResult =  RawSearchResult | WarningResult;

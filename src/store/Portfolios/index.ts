@@ -1,11 +1,11 @@
 import { createSlice, PayloadAction, ThunkAction, Action } from "@reduxjs/toolkit"
 import { IPortfoliosState } from "./types";
 import uuid from "uuid/v4";
-import { StockItem, IPortfolioState } from "./Portfolio/types";
+import { IStockItem, IPortfolioState } from "./Portfolio/types";
 import * as PortfolioMutations from "./Portfolio";
 import * as AlphaAdvantageApi from '../../api/AlphaAdvantageApi';
 
-import { RawStockItem } from "../../api/AlphaAdvantageApi/types";
+import { RawStockItem, WarningResult } from "../../api/AlphaAdvantageApi/types";
 import { RootState } from "..";
 
 /**
@@ -27,7 +27,9 @@ const portfoliosSlice = createSlice({
     name: 'portfolios',
     initialState: {
         currentPortfolioId: '',
-        list: []
+        list: [],
+        isFetching: false,
+        apiError: false
     } as IPortfoliosState,
     reducers: {
         selectCurrentPortfolio(state, action: PayloadAction<string>) {
@@ -48,7 +50,7 @@ const portfoliosSlice = createSlice({
 
             state.currentPortfolioId = newId;
         },
-        saveStockItem(state, action: PayloadAction<StockItem>) {
+        saveStockItem(state, action: PayloadAction<IStockItem>) {
             const portfolioState = getSelectedPortfolio(state);
 
             PortfolioMutations.saveStockItem(portfolioState, action.payload);
@@ -68,13 +70,19 @@ const portfoliosSlice = createSlice({
             const portfolioState = getSelectedPortfolio(state);
 
             PortfolioMutations.receivePortfolioUpdate(portfolioState, action.payload);
+        },
+        receiveApiError(state, { payload }: PayloadAction<string | false>) {
+            console.log('receiveapierror');
+            
+            state.apiError = payload;
+
         }
     }
 });
 
 const { actions, reducer } = portfoliosSlice;
 
-export const { createPortfolio, selectCurrentPortfolio, saveStockItem, recieveStockItemUpdate, requestPortfolioUpdate, receivePortfolioUpdate } = actions;
+export const { receiveApiError, createPortfolio, selectCurrentPortfolio, saveStockItem, recieveStockItemUpdate, requestPortfolioUpdate, receivePortfolioUpdate } = actions;
 
 export const fetchCurrentPortfolio =
     (): ThunkAction<void, RootState, null, Action<string>> =>
@@ -82,14 +90,39 @@ export const fetchCurrentPortfolio =
             let state = getState().portfolios;
             let { savedItems, marketValue } = getSelectedPortfolio(state);
 
+            console.table('Saved Items', savedItems);
+
             //включить спинер что мы обновляем
             //и на каждой stockItem
             dispatch(requestPortfolioUpdate())
 
             let newStockItems = savedItems
                 .map(async ({ symbol }) => {
-                    let { data } = await AlphaAdvantageApi.getQuoteEndpoint(symbol);
-                    dispatch(recieveStockItemUpdate(data));
+                    try {
+                        
+                        
+                        AlphaAdvantageApi.getQuoteEndpoint(symbol)
+                            .then(({ data }) => {
+                                const warning = data as WarningResult;
+                                console.log('updated: ', data);
+                                
+                                if (warning.Note) {
+                                    throw warning.Note;
+                                }
+                                console.log('after throw');
+                                
+                                dispatch(recieveStockItemUpdate(data as RawStockItem));
+                                receiveApiError(false);
+                            })
+                            .catch((error: string) => {
+                                console.log('error: ', error);
+
+                                receiveApiError(error);
+                            });
+                    } catch (error) {
+                        console.log(error);
+
+                    }
                 });
 
             //Обновлять каждый:

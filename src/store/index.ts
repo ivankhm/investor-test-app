@@ -15,7 +15,23 @@ const rootReducer = combineReducers({
 
 const persistConfig = {
     key: 'root',
+    version: 1,
     storage,
+
+    migrate: (state: any) => {
+        console.log('Migrating!');
+        return Promise.resolve(
+            {
+                ...state,
+                portfolios: {
+                    ...state.portfolios,
+                    isFetching: false,
+                    apiError: false
+                }
+            }
+
+        );
+    }
 }
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)

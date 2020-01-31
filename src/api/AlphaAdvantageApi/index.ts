@@ -1,6 +1,6 @@
 // api ref: https://www.alphavantage.co/documentation/
 import axios from 'axios'
-import { ApiParams, GlobalQuoteParams, RawStockItem, SymbolSearchParams, RawSearchResult } from './types';
+import { ApiParams, GlobalQuoteParams, RawStockItem, SymbolSearchParams, RawSearchResult, SymbolSearchResult, GlobalQuoteResult } from './types';
 
 
 const config = {
@@ -14,21 +14,21 @@ function executeFuntion<T>(params: ApiParams) {
     return axios.get<T>(config.apiRoot, { params });
 }
 
-export function getQuoteEndpoint(symbol: String) {
+export function getQuoteEndpoint(symbol: string) {
     let params = {
         function: 'GLOBAL_QUOTE',
         symbol
     } as GlobalQuoteParams;
 
-    return executeFuntion<RawStockItem>(params);
+    return executeFuntion<GlobalQuoteResult>(params);
 }
 
-export function getSymbolSearch(keywords: String) {
+export function getSymbolSearch(keywords: string) {
     let params = {
         function: 'SYMBOL_SEARCH',
         keywords
     } as SymbolSearchParams;
 
-    return executeFuntion<RawSearchResult>(params);
+    return executeFuntion<SymbolSearchResult>(params);
 }
 

@@ -1,7 +1,7 @@
 
 export type Currrency = 'usd' | 'rub'
 
-export interface StockItem {
+export interface IStockItem {
     name: string,
     symbol: string,
 
@@ -22,7 +22,7 @@ export interface StockItem {
 export interface IPortfolioState {
     id: string,
     name: string,
-    savedItems: StockItem[],
+    savedItems: IStockItem[],
     marketValue: number,
     deltaP: number,
 

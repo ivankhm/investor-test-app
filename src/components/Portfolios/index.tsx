@@ -6,6 +6,7 @@ import CreatePorfolioForm from './CreatePorfolioForm';
 import { RootState } from '../../store';
 import { selectCurrentPortfolio } from '../../store/Portfolios';
 import AddStockItemForm from './AddStockItemForm';
+import SelectedPortfolio from './SelectedPortfolio';
 
 interface Props {
 
@@ -31,6 +32,7 @@ const Portfolios: FC<Props> = () => {
         >
             <Grid item>
                 <CreatePorfolioForm />
+                
             </Grid>
 
             <Grid item>
@@ -46,7 +48,7 @@ const Portfolios: FC<Props> = () => {
                         </Tabs>
                     </Paper>
                     <AddStockItemForm/>
-                    
+                    <SelectedPortfolio />
                 </Paper>
 
 

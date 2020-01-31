@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction, ThunkAction, Action } from "@reduxjs/toolkit";
-import { IPortfolioState, Currrency, StockItem } from './types'
+import { IPortfolioState, Currrency, IStockItem } from './types'
 
 
 import uuid from 'uuid/v4'
@@ -25,7 +25,7 @@ import { portfoliosReducer } from "..";
  */
 
 
-export function saveStockItem(state: IPortfolioState, payload: StockItem) {
+export function saveStockItem(state: IPortfolioState, payload: IStockItem) {
     //todo: решить что с валютами
 
     state.savedItems.push(payload);

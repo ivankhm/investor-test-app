@@ -8,13 +8,7 @@ import { selectCurrentPortfolio } from '../../store/Portfolios';
 import AddStockItemForm from './AddStockItemForm';
 import SelectedPortfolio from './SelectedPortfolio';
 
-interface Props {
-
-}
-
-
-
-const Portfolios: FC<Props> = () => {
+const Portfolios: FC = () => {
     const { list, currentPortfolioId } = useSelector((state: RootState) => state.portfolios);
     const dispatch = useDispatch();
 

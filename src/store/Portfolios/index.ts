@@ -84,6 +84,15 @@ const { actions, reducer } = portfoliosSlice;
 
 export const { receiveApiError, createPortfolio, selectCurrentPortfolio, saveStockItem, recieveStockItemUpdate, requestPortfolioUpdate, receivePortfolioUpdate } = actions;
 
+//для тестирования онли
+async function delay(delayInms: number) {
+    return new Promise(resolve  => {
+      setTimeout(() => {
+        resolve(2);
+      }, delayInms);
+    });
+  }
+
 export const fetchCurrentPortfolio =
     (): ThunkAction<void, RootState, null, Action<string>> =>
         async (dispatch, getState) => {
@@ -100,6 +109,8 @@ export const fetchCurrentPortfolio =
                 .map(async ({ symbol }) => {
                     try {
                         
+                        //tsting
+                        await delay( 5000 + Math.random() * 5000);
                         
                         AlphaAdvantageApi.getQuoteEndpoint(symbol)
                             .then(({ data }) => {
@@ -112,12 +123,14 @@ export const fetchCurrentPortfolio =
                                 console.log('after throw');
                                 
                                 dispatch(recieveStockItemUpdate(data as RawStockItem));
-                                receiveApiError(false);
+                                dispatch(receiveApiError(false));
+
+                                
                             })
                             .catch((error: string) => {
                                 console.log('error: ', error);
 
-                                receiveApiError(error);
+                                dispatch(receiveApiError(error));
                             });
                     } catch (error) {
                         console.log(error);

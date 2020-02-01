@@ -7,6 +7,7 @@ import { persistStore, persistReducer } from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
 
 import thunk from 'redux-thunk'
+import { IPortfolioState } from './Portfolios/Portfolio/types'
 
 //todo: добавить редукторы сюда
 const rootReducer = combineReducers({
@@ -15,7 +16,7 @@ const rootReducer = combineReducers({
 
 const persistConfig = {
     key: 'root',
-    version: 1,
+    version: 2,
     storage,
 
     migrate: (state: any) => {
@@ -27,7 +28,7 @@ const persistConfig = {
                     ...state.portfolios,
                     isFetching: false,
                     apiError: false
-                }
+                } as IPortfolioState
             }
 
         );

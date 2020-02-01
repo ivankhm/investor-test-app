@@ -55,7 +55,13 @@ export function receivePortfolioUpdate(state: IPortfolioState, payload: number )
         .map(i => i.marketValue)
         .reduce((acc, cur) => acc + cur);
 
-    state.deltaP = payload / state.marketValue * 100;
+    console.log('payload: ', payload);
+    console.log('marketValue: ', state.marketValue);
+    
+    //  n - x y
+    //  x    100
+    //
+    state.deltaP = (payload - state.marketValue) / state.marketValue * 100;
     state.lastUpdated = Date.now();
     
 };

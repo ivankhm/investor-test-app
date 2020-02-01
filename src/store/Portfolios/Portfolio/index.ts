@@ -61,7 +61,7 @@ export function receivePortfolioUpdate(state: IPortfolioState, payload: number )
     //  n - x y
     //  x    100
     //
-    state.deltaP = (payload - state.marketValue) / state.marketValue * 100;
+    state.deltaP = (payload - state.marketValue) / (state.marketValue * 100);
     state.lastUpdated = Date.now();
     
 };

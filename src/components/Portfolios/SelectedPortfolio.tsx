@@ -84,7 +84,7 @@ const SelectedPortfolio: React.FC = () => {
 
             <Typography variant='h6'>{portfolio?.marketValue} $$$ | {portfolio?.isFetching && <CircularProgress size={24} />} </Typography>
             <Typography variant='h6'>Процент изменения {portfolio?.deltaP} % </Typography>
-            
+
             <TableContainer component={Paper}>
                 <Table size="small" >
                     <TableHead>
@@ -102,18 +102,28 @@ const SelectedPortfolio: React.FC = () => {
                         {portfolio?.savedItems.map((row: IStockItem) => (
                             <TableRow key={row.symbol}>
                                 {row.isFetching ? (
-                                    <Skeleton animation="wave" />
-                                ) : (
                                     <React.Fragment>
                                         <TableCell component="th" scope="row">
                                             {row.symbol}
                                         </TableCell>
                                         <TableCell align="right">{row.name}</TableCell>
                                         <TableCell align="right">{row.amount}</TableCell>
-                                        <TableCell align="right">{row.currentPrice} {row.currency} </TableCell>
-                                        <TableCell align="right">{row.marketValue} {row.currency}</TableCell>
-                                        <TableCell align="right">{row.deltaP}</TableCell>
+                                        <TableCell align="right"><Skeleton animation="wave" /></TableCell>
+                                        <TableCell align="right"><Skeleton animation="wave" /></TableCell>
+                                        <TableCell align="right"><Skeleton animation="wave" /></TableCell>
                                     </React.Fragment>
+                                    
+                                ) : (
+                                        <React.Fragment>
+                                            <TableCell component="th" scope="row">
+                                                {row.symbol}
+                                            </TableCell>
+                                            <TableCell align="right">{row.name}</TableCell>
+                                            <TableCell align="right">{row.amount}</TableCell>
+                                            <TableCell align="right">{row.currentPrice} {row.currency} </TableCell>
+                                            <TableCell align="right">{row.marketValue} {row.currency}</TableCell>
+                                            <TableCell align="right">{row.deltaP}</TableCell>
+                                        </React.Fragment>
 
                                     )}
 

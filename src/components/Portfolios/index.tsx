@@ -7,6 +7,7 @@ import { RootState } from '../../store';
 import { selectCurrentPortfolio } from '../../store/Portfolios';
 import AddStockItemForm from './AddStockItemForm';
 import SelectedPortfolio from './SelectedPortfolio';
+import { Alert, AlertTitle } from '@material-ui/lab';
 
 const Portfolios: FC = () => {
     const { list, currentPortfolioId } = useSelector((state: RootState) => state.portfolios);
@@ -26,32 +27,34 @@ const Portfolios: FC = () => {
         >
             <Grid item>
                 <CreatePorfolioForm />
-                
             </Grid>
 
             <Grid item>
-                <Paper style={{ minHeight: '50vh' }} elevation={1}>
-                    <Paper elevation={10}>
-                        <Tabs
-                            value={currentPortfolioId}
-                            indicatorColor="primary"
-                            textColor="primary"
-                            onChange={handleSelectPortfolio}
-                        >
-                            {list.map(l => <Tab key={l.id} label={l.name} value={l.id}/>)}
-                        </Tabs>
+                {list.length == 0 ? (
+                    <Paper>
+                        <Alert>
+                            <AlertTitle>Вы еще не создали ни одного портфеля :(</AlertTitle>
+                            Создайте новый прямо сейчас!
+                        </Alert>
                     </Paper>
-                    <AddStockItemForm/>
-                    <SelectedPortfolio />
-                </Paper>
+                ) : (
+                        <Paper style={{ minHeight: '50vh' }} elevation={1}>
+                            <Paper elevation={10}>
+                                <Tabs
+                                    value={currentPortfolioId}
+                                    indicatorColor="primary"
+                                    textColor="primary"
+                                    onChange={handleSelectPortfolio}
+                                >
+                                    {list.map(l => <Tab key={l.id} label={l.name} value={l.id} />)}
+                                </Tabs>
+                            </Paper>
+                            <AddStockItemForm />
+                            <SelectedPortfolio />
+                        </Paper>
 
-
-
+                    )}
             </Grid>
-
-
-
-
         </Grid>
     )
 }

@@ -8,10 +8,12 @@ import storage from 'redux-persist/lib/storage'
 
 import thunk from 'redux-thunk'
 import { IPortfolioState } from './Portfolios/Portfolio/types'
+import { exchangeRatesReducer } from './ExchangeRates'
 
 //todo: добавить редукторы сюда
 const rootReducer = combineReducers({
-    portfolios: portfoliosReducer
+    portfolios: portfoliosReducer,
+    exchangeRates: exchangeRatesReducer
 });
 
 const persistConfig = {

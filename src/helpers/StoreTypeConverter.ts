@@ -34,3 +34,5 @@ export function combineSearchAndItem(searchMarch: RawSearchMatch, {'Global Quote
 
     return stockItem;
 }
+
+//todo:  конвертер из сырого в нет или не надо хз

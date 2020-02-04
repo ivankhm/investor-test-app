@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction, ThunkAction, Action } from "@reduxjs/toolkit"
 import { IPortfoliosState } from "./types";
 import uuid from "uuid/v4";
-import { IStockItem, IPortfolioState } from "./Portfolio/types";
+import { IStockItem } from "./Portfolio/types";
 import * as PortfolioMutations from "./Portfolio";
 import * as AlphaAdvantageApi from '../../api/AlphaAdvantageApi';
 

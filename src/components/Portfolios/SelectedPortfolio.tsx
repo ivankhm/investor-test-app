@@ -41,7 +41,7 @@ const SelectedPortfolio: React.FC = () => {
 
                     clearTimeout(updateTimeout);
                     setUpdateTimeout(0);
-                }, 30000)   
+                }, 30000)
             )
 
         }

@@ -1,6 +1,6 @@
 // api ref: https://www.alphavantage.co/documentation/
 import axios from 'axios'
-import { ApiParams, GlobalQuoteParams, RawStockItem, SymbolSearchParams, RawSearchResult, SymbolSearchResult, GlobalQuoteResult } from './types';
+import { ApiParams, GlobalQuoteParams, SymbolSearchParams, SymbolSearchResult, GlobalQuoteResult } from './types';
 
 
 const config = {

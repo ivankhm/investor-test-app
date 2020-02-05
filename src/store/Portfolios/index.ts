@@ -1,12 +1,12 @@
 import { createSlice, PayloadAction, ThunkAction, Action } from "@reduxjs/toolkit"
-import { IPortfoliosState } from "./types";
+import { IPortfoliosState, IStockItem } from "./types";
 import uuid from "uuid/v4";
-import { IStockItem } from "./Portfolio/types";
-import * as PortfolioMutations from "./Portfolio";
 import * as AlphaAdvantageApi from '../../api/AlphaAdvantageApi';
 
 import { RawStockItem, WarningResult } from "../../api/AlphaAdvantageApi/types";
 import { RootState } from "..";
+import { updateStockItemFromRaw } from "../../helpers/StoreTypeConverter";
+import { RatesMapping } from "../../api/CBR/types";
 
 /**
 *  короч
@@ -52,33 +52,69 @@ const portfoliosSlice = createSlice({
         },
         saveStockItem(state, action: PayloadAction<IStockItem>) {
             const portfolioState = getSelectedPortfolio(state);
-
-            PortfolioMutations.saveStockItem(portfolioState, action.payload);
+            //туду сумму сделать
+            portfolioState.savedItems.push(action.payload);
 
         },
-        recieveStockItemUpdate(state, action: PayloadAction<RawStockItem>) {
-            const portfolioState = getSelectedPortfolio(state);
+        recieveStockItemUpdate(state, { payload }: PayloadAction<RawStockItem>) {
+            const { savedItems } = getSelectedPortfolio(state);
 
-            PortfolioMutations.recieveStockItemUpdate(portfolioState, action.payload);
+            let oldItemIndex = savedItems.findIndex(v => v.symbol === payload["Global Quote"]["01. symbol"]);
+
+            let newStockItem = updateStockItemFromRaw(savedItems[oldItemIndex], payload)
+            newStockItem.isFetching = false;
+
+            savedItems[oldItemIndex] = newStockItem;
         },
         requestPortfolioUpdate(state, action: PayloadAction<void>) {
             const portfolioState = getSelectedPortfolio(state);
+            portfolioState.isFetching = true;
+            portfolioState.savedItems.forEach(v => v.isFetching = true);
 
-            PortfolioMutations.requestPortfolioUpdate(portfolioState);
+
         },
-        receivePortfolioUpdate(state, action: PayloadAction<number>) {
+        receivePortfolioUpdate(state, { payload }: PayloadAction<{ oldMarketValue: number, rates: RatesMapping }>) {
             const portfolioState = getSelectedPortfolio(state);
+            //флаги для спинеров и т.д.
+            portfolioState.isFetching = false;
 
-            PortfolioMutations.receivePortfolioUpdate(portfolioState, action.payload);
+            //сумма стоимости
+            console.log('savedItems: ', portfolioState.savedItems);
+            console.log('rates: ', payload.rates);
+            
+            console.log('payload.oldMarketValue: ', payload.oldMarketValue);
+            
+
+            portfolioState.marketValue = getPortolioSum(portfolioState.savedItems, payload.rates);
+            console.log('marketValue: ', portfolioState.marketValue);
+            console.log('после пересчета oMV: ', payload.oldMarketValue);
+            
+                //  n - x y
+                //  x    100
+                //
+
+            portfolioState.deltaP = (payload.oldMarketValue - portfolioState.marketValue) / (portfolioState.marketValue * 100);
+            
+            portfolioState.lastUpdated = Date.now();
         },
         receiveApiError(state, { payload }: PayloadAction<string | false>) {
             console.log('receiveapierror');
-            
+
             state.apiError = payload;
 
         }
     }
 });
+
+function getPortolioSum(savedItems: IStockItem[], rates: RatesMapping): number {
+    const result = savedItems
+        .map(i => {
+            const { Value, Nominal } = rates[i.currency];
+            return i.marketValue * Value / Nominal;
+        }) //переводим в рубли
+        .reduce((acc, cur) => acc + cur); //просто счтитаем сумму
+    return result;
+}
 
 const { actions, reducer } = portfoliosSlice;
 
@@ -86,18 +122,20 @@ export const { receiveApiError, createPortfolio, selectCurrentPortfolio, saveSto
 
 //для тестирования онли
 async function delay(delayInms: number) {
-    return new Promise(resolve  => {
-      setTimeout(() => {
-        resolve(2);
-      }, delayInms);
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve(2);
+        }, delayInms);
     });
-  }
+}
 
 export const fetchCurrentPortfolio =
     (): ThunkAction<void, RootState, null, Action<string>> =>
         async (dispatch, getState) => {
-            let state = getState().portfolios;
-            let { savedItems, marketValue } = getSelectedPortfolio(state);
+            const state = getState().portfolios;
+            const rates = getState().exchangeRates.rates;
+            
+            const { savedItems, marketValue: oldMarketValue } = getSelectedPortfolio(state);
 
             console.table('Saved Items', savedItems);
 
@@ -105,27 +143,27 @@ export const fetchCurrentPortfolio =
             //и на каждой stockItem
             dispatch(requestPortfolioUpdate())
 
-            let newStockItems = savedItems
+            const stockItemsRequests = savedItems
                 .map(async ({ symbol }) => {
                     try {
-                        
+
                         //tsting
-                        await delay( 5000 + Math.random() * 5000);
-                        
+                        await delay(5000 + Math.random() * 5000);
+
                         AlphaAdvantageApi.getQuoteEndpoint(symbol)
                             .then(({ data }) => {
                                 const warning = data as WarningResult;
                                 console.log('updated: ', data);
-                                
+
                                 if (warning.Note) {
                                     throw warning.Note;
                                 }
                                 console.log('after throw');
-                                
+
                                 dispatch(recieveStockItemUpdate(data as RawStockItem));
                                 dispatch(receiveApiError(false));
 
-                                
+
                             })
                             .catch((error: string) => {
                                 console.log('error: ', error);
@@ -147,10 +185,10 @@ export const fetchCurrentPortfolio =
             //-: безполезное свойство isFetching, пользователю меньше фидбека
 
             //ждем когда все обновятся
-            await Promise.all(newStockItems);
-
+            await Promise.all(stockItemsRequests);
+            
             //выключаем общий спинер, обновляем общую стоимость;
-            dispatch(receivePortfolioUpdate(marketValue));
+            dispatch(receivePortfolioUpdate({oldMarketValue, rates}));
         }
 
 

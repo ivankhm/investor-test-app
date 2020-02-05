@@ -1,6 +1,5 @@
-import React, { FC, Fragment } from 'react'
-import { Tabs, Tab, Paper, AppBar, Box, TextField, Button, Grid, Container, TableContainer, Table, TableHead, TableRow, TableCell, TableBody } from '@material-ui/core';
-import Autocomplete from '@material-ui/lab/Autocomplete';
+import React, { FC, useEffect } from 'react'
+import { Tabs, Tab, Paper, Grid } from '@material-ui/core';
 import { useSelector, useDispatch } from 'react-redux'
 import CreatePorfolioForm from './CreatePorfolioForm';
 import { RootState } from '../../store';
@@ -8,6 +7,7 @@ import { selectCurrentPortfolio } from '../../store/Portfolios';
 import AddStockItemForm from './AddStockItemForm';
 import SelectedPortfolio from './SelectedPortfolio';
 import { Alert, AlertTitle } from '@material-ui/lab';
+import { fetchExchangeRates } from '../../store/ExchangeRates';
 
 const Portfolios: FC = () => {
     const { list, currentPortfolioId } = useSelector((state: RootState) => state.portfolios);
@@ -17,7 +17,13 @@ const Portfolios: FC = () => {
         dispatch(selectCurrentPortfolio(newValue));
     };
 
+    useEffect(() => {
+        dispatch(fetchExchangeRates());
+    }, []);
+
     return (
+        
+
         <Grid
             container
             direction="column"
@@ -25,12 +31,13 @@ const Portfolios: FC = () => {
             alignItems="stretch"
             spacing={2}
         >
+            
             <Grid item>
                 <CreatePorfolioForm />
             </Grid>
 
             <Grid item>
-                {list.length == 0 ? (
+                {list.length === 0 ? (
                     <Paper>
                         <Alert>
                             <AlertTitle>Вы еще не создали ни одного портфеля :(</AlertTitle>

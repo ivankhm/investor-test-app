@@ -7,7 +7,7 @@ import { persistStore, persistReducer } from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
 
 import thunk from 'redux-thunk'
-import { IPortfolioState } from './Portfolios/Portfolio/types'
+import { IPortfolioState } from './Portfolios/types'
 import { exchangeRatesReducer } from './ExchangeRates'
 
 //todo: добавить редукторы сюда

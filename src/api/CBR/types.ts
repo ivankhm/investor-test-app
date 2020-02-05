@@ -3,9 +3,7 @@ export interface RawDailyRates {
     PreviousDate: string,
     PreviousURL: string,
     Timestamp: string,
-    Valute: {
-        [key: string]: RatesMapping
-    }
+    Valute: RatesMapping
 }
 
 export interface RatesMapping {

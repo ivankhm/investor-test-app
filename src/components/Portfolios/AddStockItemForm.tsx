@@ -1,10 +1,9 @@
-import React, { FC, useState, useMemo, useEffect } from 'react'
+import React, { FC, useState, useEffect } from 'react'
 import { RawSearchMatch, RawStockItem, WarningResult, RawSearchResult } from '../../api/AlphaAdvantageApi/types';
 import { Paper, Grid, TextField, Button, CircularProgress, Typography } from '@material-ui/core';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import { getSymbolSearch, getQuoteEndpoint } from '../../api/AlphaAdvantageApi';
 import { useDispatch } from 'react-redux';
-import { IStockItem } from '../../store/Portfolios/Portfolio/types';
 import { combineSearchAndItem } from '../../helpers/StoreTypeConverter';
 import { saveStockItem } from '../../store/Portfolios';
 

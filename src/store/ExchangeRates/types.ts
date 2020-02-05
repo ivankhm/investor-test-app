@@ -5,5 +5,6 @@ export interface ExchangeRates {
     lastUpdated: number,
     rates: RatesMapping, 
     isFetching: boolean, 
-    didInvalidate: boolean
+    didInvalidate: boolean,
+    apiError: string | false
 };

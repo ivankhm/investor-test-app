@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { makeStyles, Typography, Link, Container } from '@material-ui/core';
+import { Typography, Link, Container } from '@material-ui/core';
 
 function Copyright() {
   return (

@@ -1,11 +1,10 @@
-import React, { Component, ReactNode } from 'react'
+import React, { ReactNode } from 'react'
 import Footer from './Footer'
 import Header from './Header'
 import { CssBaseline, Container } from '@material-ui/core'
 
 import { createMuiTheme, ThemeProvider, makeStyles } from "@material-ui/core/styles";
 import { ruRU } from '@material-ui/core/locale';
-import { sizing } from '@material-ui/system';
 
 //локализация
 const theme = createMuiTheme({}, ruRU);

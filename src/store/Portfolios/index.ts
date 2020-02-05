@@ -81,20 +81,20 @@ const portfoliosSlice = createSlice({
             //сумма стоимости
             console.log('savedItems: ', portfolioState.savedItems);
             console.log('rates: ', payload.rates);
-            
+
             console.log('payload.oldMarketValue: ', payload.oldMarketValue);
-            
+
 
             portfolioState.marketValue = getPortolioSum(portfolioState.savedItems, payload.rates);
             console.log('marketValue: ', portfolioState.marketValue);
             console.log('после пересчета oMV: ', payload.oldMarketValue);
-            
-                //  n - x y
-                //  x    100
-                //
 
-            portfolioState.deltaP = (payload.oldMarketValue - portfolioState.marketValue) / (portfolioState.marketValue * 100);
-            
+            //  n - x y
+            //  x    100
+            //
+
+            portfolioState.deltaP = Math.round(((payload.oldMarketValue - portfolioState.marketValue) / (portfolioState.marketValue)) * 100) / 10000 ;
+
             portfolioState.lastUpdated = Date.now();
         },
         receiveApiError(state, { payload }: PayloadAction<string | false>) {
@@ -110,9 +110,9 @@ function getPortolioSum(savedItems: IStockItem[], rates: RatesMapping): number {
     const result = savedItems
         .map(i => {
             const { Value, Nominal } = rates[i.currency];
-            return i.marketValue * Value / Nominal;
+            return Math.round(((i.marketValue * 100) * (Value * 100) / Nominal) / 100) / 100;
         }) //переводим в рубли
-        .reduce((acc, cur) => acc + cur); //просто счтитаем сумму
+        .reduce((acc, cur) => ((acc * 100) + (cur * 100)) / 100); //просто счтитаем сумму
     return result;
 }
 
@@ -134,7 +134,7 @@ export const fetchCurrentPortfolio =
         async (dispatch, getState) => {
             const state = getState().portfolios;
             const rates = getState().exchangeRates.rates;
-            
+
             const { savedItems, marketValue: oldMarketValue } = getSelectedPortfolio(state);
 
             console.table('Saved Items', savedItems);
@@ -186,9 +186,9 @@ export const fetchCurrentPortfolio =
 
             //ждем когда все обновятся
             await Promise.all(stockItemsRequests);
-            
+
             //выключаем общий спинер, обновляем общую стоимость;
-            dispatch(receivePortfolioUpdate({oldMarketValue, rates}));
+            dispatch(receivePortfolioUpdate({ oldMarketValue, rates }));
         }
 
 

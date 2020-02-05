@@ -29,6 +29,7 @@ const SelectedPortfolio: React.FC = () => {
         }
     }, [apiError])
 
+    //todo: обновить условия, сейчас работает один раз и все
     useEffect(() => {
         console.log('isFetching: ', portfolio?.isFetching);
         console.log('timeout: ', updateTimeout);

@@ -11,7 +11,7 @@ import { fetchCurrentPortfolio } from '../../store/Portfolios'
 
 const SelectedPortfolio: React.FC = () => {
     const portfolio = useSelector(({ portfolios }: RootState) => portfolios.list.find(v => v.id === portfolios.currentPortfolioId));
-    const apiError = useSelector((state: RootState) => state.portfolios.apiError);
+    
     const [openError, setOpenError] = React.useState(false);
 
     const [updateTimeout, setUpdateTimeout] = useState<number>(0);
@@ -20,14 +20,14 @@ const SelectedPortfolio: React.FC = () => {
     const dispatch = useDispatch();
     
     useEffect(() => {
-        console.log('apiError: ', apiError);
+        console.log('apiError: ', portfolio?.apiLastError);
 
-        if (apiError === false) {
+        if (portfolio?.apiLastError === false) {
             setOpenError(false);
         } else {
             setOpenError(true);
         }
-    }, [apiError])
+    }, [portfolio?.apiLastError])
 
     //todo: обновить условия, сейчас работает один раз и все
     useEffect(() => {
@@ -42,7 +42,7 @@ const SelectedPortfolio: React.FC = () => {
 
                     clearTimeout(updateTimeout);
                     setUpdateTimeout(0);
-                }, 30000)
+                }, 10000)
             )
 
         }
@@ -78,7 +78,7 @@ const SelectedPortfolio: React.FC = () => {
                     <AlertTitle>Ошибочка!</AlertTitle>
                     <p>Что-то пошло не так при работе с API, подробности:</p>
                     <p>
-                        <strong>{apiError as string}</strong>
+                        <strong>{portfolio!.apiLastError as string}</strong>
                     </p>
                 </Alert>
             </Collapse>
@@ -90,7 +90,7 @@ const SelectedPortfolio: React.FC = () => {
                 spacing={2}
             >
                 <Grid item>
-                    <Typography variant="overline" display="block" gutterBottom>
+                    <Typography color={portfolio?.didInvalidate ? 'initial' : 'error'} variant="overline" display="block" gutterBottom>
                         Рыночная стоимость портфеля
                     </Typography>
                     <Typography variant='h5'> {portfolio?.isFetching ? <CircularProgress size={24} /> : portfolio?.marketValue} RUB</Typography>
@@ -119,7 +119,7 @@ const SelectedPortfolio: React.FC = () => {
                     </TableHead>
                     <TableBody>
                         {portfolio?.savedItems.map((row: IStockItem) => (
-                            <TableRow key={row.symbol}>
+                            <TableRow selected={!row.didInvalidate} key={row.symbol}>
                                 {row.isFetching ? (
                                     <React.Fragment>
                                         <TableCell component="th" scope="row">

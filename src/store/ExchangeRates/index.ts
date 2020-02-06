@@ -3,6 +3,7 @@ import { ExchangeRates } from "./types";
 import { RootState } from "..";
 import { getExchangeRates } from "../../api/CBR";
 import { RatesMapping } from "../../api/CBR/types";
+import { beginFetching, endFetching } from '../Base/FetchingBase'
 
 //день
 const UPDATE_TIMEOUT = 86400000;
@@ -14,17 +15,14 @@ const exchangeRatesSlice = createSlice({
         rates: {},
         isFetching: false,
         didInvalidate: false,
-        apiError: false
+        apiLastError: false
     } as ExchangeRates,
     reducers: {
         requestRates(state, action: PayloadAction<void>) {
-
-            state.isFetching = true;
-            state.didInvalidate = false;
+            return beginFetching(state);
         },
 
         reciveRates(state, action: PayloadAction<RatesMapping>) {
-
             state.lastUpdated = Date.now();
             //заглушка, чтобы цены в рублях не пересчитывались
             state.rates =
@@ -40,19 +38,12 @@ const exchangeRatesSlice = createSlice({
                     Previous: 1
                 }
             };
-            state.isFetching = false;
-            state.didInvalidate = true;
-            state.apiError = false;
+
+            state = endFetching(state);
         },
-
-        reciveError(state, action: PayloadAction<string | false>) {
-
-            state.isFetching = false;
-            state.apiError = action.payload;
-
+        reciveError(state, {payload: apiLastError}: PayloadAction<string | false>) {
+            return endFetching(state, apiLastError); 
         }
-
-
     }
 });
 
@@ -68,7 +59,7 @@ export const fetchExchangeRates =
         async (dispatch, getState) => {
             const currentDate = Date.now();
             console.trace('проверка даты');
-            
+            //
             if (currentDate - getState().exchangeRates.lastUpdated > UPDATE_TIMEOUT) {
                 console.log('старье - обновляем')
                 dispatch(requestRates());

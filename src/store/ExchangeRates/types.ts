@@ -1,10 +1,7 @@
 import { RatesMapping } from "../../api/CBR/types";
+import { IFetchingBase } from '../Base/FetchingBase'
 
-
-export interface ExchangeRates {
+export interface ExchangeRates extends IFetchingBase {
     lastUpdated: number,
-    rates: RatesMapping, 
-    isFetching: boolean, 
-    didInvalidate: boolean,
-    apiError: string | false
+    rates: RatesMapping,
 };

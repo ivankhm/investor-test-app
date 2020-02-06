@@ -3,12 +3,12 @@ import { configureStore } from '@reduxjs/toolkit'
 
 import { portfoliosReducer } from './Portfolios'
 
-import { persistStore, persistReducer } from 'redux-persist'
+import { persistStore, persistReducer, createMigrate } from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
 
 import thunk from 'redux-thunk'
-import { IPortfolioState } from './Portfolios/types'
 import { exchangeRatesReducer } from './ExchangeRates'
+import { migrations } from './migrations'
 
 //todo: добавить редукторы сюда
 const rootReducer = combineReducers({
@@ -18,24 +18,11 @@ const rootReducer = combineReducers({
 
 const persistConfig = {
     key: 'root',
-    version: 2,
+    version: 5,
     storage,
-
-    migrate: (state: any) => {
-        console.log('Migrating!');
-        return Promise.resolve(
-            {
-                ...state,
-                portfolios: {
-                    ...state.portfolios,
-                    isFetching: false,
-                    apiError: false
-                } as IPortfolioState
-            }
-
-        );
-    }
+    migrate: createMigrate(migrations, { debug: false }),
 }
+
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)
 

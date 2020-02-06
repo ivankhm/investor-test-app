@@ -11,7 +11,7 @@ export function updateStockItemFromRaw(item: IStockItem, {'Global Quote': raw}: 
         deltaP: raw["10. change percent"]
     };
 
-    result.marketValue = result.amount * result.currentPrice;
+    result.marketValue = Math.round((result.amount * 100) * (result.currentPrice * 100) / 100)/100;
 
     return result;
 }
@@ -25,12 +25,14 @@ export function combineSearchAndItem(searchMarch: RawSearchMatch, {'Global Quote
         amount: amount,
 
         currentPrice: stockItemPrice,
-        marketValue: stockItemPrice * amount,
+        marketValue: Math.round((stockItemPrice * 100) * amount)/100,
 
         deltaP: item["10. change percent"], //процент изменения в виде строки ы
         currency: searchMarch["8. currency"].toUpperCase() as Currrency, 
 
-        isFetching: false
+        isFetching: false,
+        didInvalidate: true,
+        apiLastError: false
     }
 
     return stockItem;

@@ -7,6 +7,7 @@ import { RawStockItem, WarningResult } from "../../api/AlphaAdvantageApi/types";
 import { RootState } from "..";
 import { updateStockItemFromRaw } from "../../helpers/StoreTypeConverter";
 import { RatesMapping } from "../../api/CBR/types";
+import { endFetching, beginFetching } from "../Base/FetchingBase";
 
 /**
 *  короч
@@ -22,21 +23,25 @@ function getSelectedPortfolio(state: IPortfoliosState) {
     return state.list.find(v => v.id === state.currentPortfolioId)!;
 }
 
+function getSelectedPortfolioIndex(state: IPortfoliosState) {
+    return state.list.findIndex(v => v.id === state.currentPortfolioId)!;
+}
+
+
 //PortfioMutations - изменяет параметр state - т.к. они используются внутри createSlicе, такая логика допустима благодоря Immer
 const portfoliosSlice = createSlice({
     name: 'portfolios',
     initialState: {
         currentPortfolioId: '',
         list: [],
-        isFetching: false,
-        apiError: false
+        isFetching: false
     } as IPortfoliosState,
     reducers: {
-        selectCurrentPortfolio(state, action: PayloadAction<string>) {
-            state.currentPortfolioId = action.payload;
+        selectCurrentPortfolio(state, { payload: currentPortfolioId }: PayloadAction<string>) {
+            state.currentPortfolioId = currentPortfolioId;
         },
         createPortfolio(state, action: PayloadAction<string>) {
-            let newId = uuid();
+            const newId = uuid();
             state.list.push({
                 id: newId,
                 name: action.payload,
@@ -44,64 +49,74 @@ const portfoliosSlice = createSlice({
                 marketValue: 0,
                 deltaP: 0,
 
-                lastUpdated: 0,
-                isFetching: false
+                isFetching: false,
+                didInvalidate: true,
+                apiLastError: false
             });
 
             state.currentPortfolioId = newId;
         },
-        saveStockItem(state, action: PayloadAction<IStockItem>) {
+        saveStockItem(state, { payload }: PayloadAction<IStockItem>) {
             const portfolioState = getSelectedPortfolio(state);
             //туду сумму сделать
-            portfolioState.savedItems.push(action.payload);
+            const index = portfolioState.savedItems.findIndex(v => v.symbol === payload.symbol);
 
+            if (index === -1) {
+                portfolioState.savedItems.push(payload);
+            } else {
+                portfolioState.savedItems[index].amount += payload.amount;
+
+                const { amount, currentPrice } = portfolioState.savedItems[index];
+                portfolioState.savedItems[index].marketValue = amount * currentPrice;
+            }
         },
+
         recieveStockItemUpdate(state, { payload }: PayloadAction<RawStockItem>) {
             const { savedItems } = getSelectedPortfolio(state);
 
-            let oldItemIndex = savedItems.findIndex(v => v.symbol === payload["Global Quote"]["01. symbol"]);
+            const oldItemIndex = savedItems.findIndex(v => v.symbol === payload["Global Quote"]["01. symbol"]);
 
             let newStockItem = updateStockItemFromRaw(savedItems[oldItemIndex], payload)
-            newStockItem.isFetching = false;
+
+            newStockItem = endFetching(newStockItem);
 
             savedItems[oldItemIndex] = newStockItem;
         },
-        requestPortfolioUpdate(state, action: PayloadAction<void>) {
-            const portfolioState = getSelectedPortfolio(state);
-            portfolioState.isFetching = true;
-            portfolioState.savedItems.forEach(v => v.isFetching = true);
 
-
+        recieveStockItemError(state, { payload }: PayloadAction<{ error: string, symbol: string }>) {
+            const { savedItems } = getSelectedPortfolio(state);
+            const oldItemIndex = savedItems.findIndex(v => v.symbol === payload.symbol);
+            const newStockItem = endFetching(savedItems[oldItemIndex], payload.error);
+            savedItems[oldItemIndex] = newStockItem;
         },
+
+        requestPortfolioUpdate(state, action: PayloadAction<void>) {
+            const index = getSelectedPortfolioIndex(state);
+            state.list[index] = beginFetching(state.list[index]);
+            state.list[index].savedItems = state.list[index].savedItems.map(item => beginFetching(item));
+        },
+
         receivePortfolioUpdate(state, { payload }: PayloadAction<{ oldMarketValue: number, rates: RatesMapping }>) {
-            const portfolioState = getSelectedPortfolio(state);
-            //флаги для спинеров и т.д.
-            portfolioState.isFetching = false;
+            const index = getSelectedPortfolioIndex(state);
+            const portfolioState = state.list[index];
 
             //сумма стоимости
-            console.log('savedItems: ', portfolioState.savedItems);
-            console.log('rates: ', payload.rates);
-
-            console.log('payload.oldMarketValue: ', payload.oldMarketValue);
-
-
             portfolioState.marketValue = getPortolioSum(portfolioState.savedItems, payload.rates);
-            console.log('marketValue: ', portfolioState.marketValue);
-            console.log('после пересчета oMV: ', payload.oldMarketValue);
 
             //  n - x y
             //  x    100
             //
+            portfolioState.deltaP = Math.round(((payload.oldMarketValue - portfolioState.marketValue) / (portfolioState.marketValue)) * 100) / 10000;
 
-            portfolioState.deltaP = Math.round(((payload.oldMarketValue - portfolioState.marketValue) / (portfolioState.marketValue)) * 100) / 10000 ;
-
-            portfolioState.lastUpdated = Date.now();
+            state.list[index] = endFetching(portfolioState);
+            state.isFetching = false;
         },
-        receiveApiError(state, { payload }: PayloadAction<string | false>) {
-            console.log('receiveapierror');
+        receiveApiError(state, { payload: apiLastError }: PayloadAction<string | false>) {
+            console.log('receiveapierror', apiLastError);
+            const index = getSelectedPortfolioIndex(state);
 
-            state.apiError = payload;
-
+            state.list[index] = endFetching(state.list[index], apiLastError);
+            state.isFetching = false;
         }
     }
 });
@@ -118,7 +133,7 @@ function getPortolioSum(savedItems: IStockItem[], rates: RatesMapping): number {
 
 const { actions, reducer } = portfoliosSlice;
 
-export const { receiveApiError, createPortfolio, selectCurrentPortfolio, saveStockItem, recieveStockItemUpdate, requestPortfolioUpdate, receivePortfolioUpdate } = actions;
+export const { recieveStockItemError, receiveApiError, createPortfolio, selectCurrentPortfolio, saveStockItem, recieveStockItemUpdate, requestPortfolioUpdate, receivePortfolioUpdate } = actions;
 
 //для тестирования онли
 async function delay(delayInms: number) {
@@ -145,35 +160,29 @@ export const fetchCurrentPortfolio =
 
             const stockItemsRequests = savedItems
                 .map(async ({ symbol }) => {
-                    try {
 
-                        //tsting
-                        await delay(5000 + Math.random() * 5000);
+                    //tsting
+                    await delay(5000 + Math.random() * 5000);
 
-                        AlphaAdvantageApi.getQuoteEndpoint(symbol)
-                            .then(({ data }) => {
-                                const warning = data as WarningResult;
-                                console.log('updated: ', data);
+                    AlphaAdvantageApi.getQuoteEndpoint(symbol)
+                        .then(({ data }) => {
+                            const warning = data as WarningResult;
+                            console.log('updated: ', data);
 
-                                if (warning.Note) {
-                                    throw warning.Note;
-                                }
-                                console.log('after throw');
+                            if (warning.Note) {
+                                dispatch(recieveStockItemError({ error: warning.Note, symbol }))
+                                throw warning.Note;
+                            }
 
-                                dispatch(recieveStockItemUpdate(data as RawStockItem));
-                                dispatch(receiveApiError(false));
+                            dispatch(recieveStockItemUpdate(data as RawStockItem));
+                            //dispatch(receiveApiError(false));
+                        })
+                        .catch((error: string) => {
+                            console.log('error: ', error);
 
+                            dispatch(receiveApiError(error));
+                        });
 
-                            })
-                            .catch((error: string) => {
-                                console.log('error: ', error);
-
-                                dispatch(receiveApiError(error));
-                            });
-                    } catch (error) {
-                        console.log(error);
-
-                    }
                 });
 
             //Обновлять каждый:
@@ -186,6 +195,7 @@ export const fetchCurrentPortfolio =
 
             //ждем когда все обновятся
             await Promise.all(stockItemsRequests);
+            console.log('Дождались всех, изи бризи');
 
             //выключаем общий спинер, обновляем общую стоимость;
             dispatch(receivePortfolioUpdate({ oldMarketValue, rates }));

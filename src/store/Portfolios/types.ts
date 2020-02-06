@@ -29,7 +29,7 @@ export interface IPortfolioState extends IFetchingBase {
 export interface IPortfoliosState {
     currentPortfolioId: string,
     list: IPortfolioState[],
-    
+
     //чтобы просто блокировать переключение
-    isFetching: Boolean
+    isFetching: boolean
 }

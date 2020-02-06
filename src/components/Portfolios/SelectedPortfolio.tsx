@@ -5,57 +5,85 @@ import CloseIcon from '@material-ui/icons/Close';
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../../store'
 import { IStockItem } from '../../store/Portfolios/types'
-import { fetchCurrentPortfolio } from '../../store/Portfolios'
+import { fetchCurrentPortfolio, abortUpdatig } from '../../store/Portfolios'
 
 
 
 const SelectedPortfolio: React.FC = () => {
     const portfolio = useSelector(({ portfolios }: RootState) => portfolios.list.find(v => v.id === portfolios.currentPortfolioId));
-    
+
     const [openError, setOpenError] = React.useState(false);
 
     const [updateTimeout, setUpdateTimeout] = useState<number>(0);
 
-
     const dispatch = useDispatch();
-    
-    useEffect(() => {
-        console.log('apiError: ', portfolio?.apiLastError);
 
-        if (portfolio?.apiLastError === false) {
+    useEffect(() => {
+        console.log('SelectedPortfolio mount');
+
+        if (portfolio!.isFetching) {
+            dispatch(abortUpdatig());
+        }
+
+        return () => {
+            console.log('SelectedPortfolio unmount');
+
+            if (portfolio!.isFetching) {
+                dispatch(abortUpdatig());
+            }
+        };
+    }, [])
+
+    useEffect(() => {
+        console.log('apiError: ', portfolio!.apiLastError);
+
+        if (portfolio!.apiLastError === false) {
             setOpenError(false);
         } else {
             setOpenError(true);
         }
-    }, [portfolio?.apiLastError])
+    }, [portfolio!.apiLastError])
 
     //todo: обновить условия, сейчас работает один раз и все
+    //так как оно надо
+    // did mount - запустить таймер
+    // -закончилось- обновление - запустить новый таймер
+    // -если не закончилось не запускать
+    // - когда компонент анмаунтится - очистить таймер
+    //
+    
+    //один раз при анмаунте
     useEffect(() => {
+        console.log('mounting - nothing');
+        
+        //!portfolio?.isFetching && !updateTimeout && portfolio?.savedItems.length !== 0
+
+        return () => {
+            if (updateTimeout) {
+                console.log('clearing');
+                clearTimeout(updateTimeout);
+                setUpdateTimeout(0);
+            }
+        }
+    }, [portfolio!.id])
+
+
+
+    //много раз при обновлении
+    useEffect(() => {
+        console.log('mounting - выставление таймаута');
         console.log('isFetching: ', portfolio?.isFetching);
         console.log('timeout: ', updateTimeout);
-        //!portfolio?.isFetching && !updateTimeout && portfolio?.savedItems.length !== 0
-        if (true) {
+        if (!portfolio!.isFetching && portfolio?.savedItems.length !== 0) {
             setUpdateTimeout(
                 window.setTimeout(() => {
                     console.log('setTimout');
                     dispatch(fetchCurrentPortfolio());
-
-                    clearTimeout(updateTimeout);
-                    setUpdateTimeout(0);
                 }, 10000)
             )
-
         }
-        return () => {
-            if (updateTimeout) {
-                console.log('clearing');
+    }, [portfolio!.isFetching, portfolio!.id])
 
-                clearTimeout(updateTimeout);
-                setUpdateTimeout(0);
-            }
-
-        }
-    }, [])
     //portfolio?.isFetching, updateTimeout, portfolio?.savedItems
     return (
         <div>
@@ -90,7 +118,7 @@ const SelectedPortfolio: React.FC = () => {
                 spacing={2}
             >
                 <Grid item>
-                    <Typography color={portfolio?.didInvalidate ? 'initial' : 'error'} variant="overline" display="block" gutterBottom>
+                    <Typography color={(!portfolio?.didInvalidate && !portfolio?.isFetching) ? 'error' : 'initial'} variant="overline" display="block" gutterBottom>
                         Рыночная стоимость портфеля
                     </Typography>
                     <Typography variant='h5'> {portfolio?.isFetching ? <CircularProgress size={24} /> : portfolio?.marketValue} RUB</Typography>
@@ -119,14 +147,15 @@ const SelectedPortfolio: React.FC = () => {
                     </TableHead>
                     <TableBody>
                         {portfolio?.savedItems.map((row: IStockItem) => (
-                            <TableRow selected={!row.didInvalidate} key={row.symbol}>
+                            <TableRow selected={!row.didInvalidate && !row.isFetching} key={row.symbol}>
+                                <TableCell component="th" scope="row">
+                                    {row.symbol}
+                                </TableCell>
+                                <TableCell align="right">{row.name}</TableCell>
+                                <TableCell align="right">{row.amount}</TableCell>
                                 {row.isFetching ? (
                                     <React.Fragment>
-                                        <TableCell component="th" scope="row">
-                                            {row.symbol}
-                                        </TableCell>
-                                        <TableCell align="right">{row.name}</TableCell>
-                                        <TableCell align="right">{row.amount}</TableCell>
+
                                         <TableCell align="right"><Skeleton animation="wave" /></TableCell>
                                         <TableCell align="right"><Skeleton animation="wave" /></TableCell>
                                         <TableCell align="right"><Skeleton animation="wave" /></TableCell>
@@ -134,11 +163,6 @@ const SelectedPortfolio: React.FC = () => {
 
                                 ) : (
                                         <React.Fragment>
-                                            <TableCell component="th" scope="row">
-                                                {row.symbol}
-                                            </TableCell>
-                                            <TableCell align="right">{row.name}</TableCell>
-                                            <TableCell align="right">{row.amount}</TableCell>
                                             <TableCell align="right">{row.currentPrice} {row.currency} </TableCell>
                                             <TableCell align="right">{row.marketValue} {row.currency}</TableCell>
                                             <TableCell align="right">{row.deltaP}</TableCell>

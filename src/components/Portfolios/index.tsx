@@ -10,14 +10,19 @@ import { Alert, AlertTitle } from '@material-ui/lab';
 import { fetchExchangeRates } from '../../store/ExchangeRates';
 
 const Portfolios: FC = () => {
-    const { list, currentPortfolioId } = useSelector((state: RootState) => state.portfolios);
+    const { list, currentPortfolioId, isFetching } = useSelector((state: RootState) => state.portfolios);
     const dispatch = useDispatch();
 
     const handleSelectPortfolio = (event: React.ChangeEvent<{}>, newValue: string) => {
-        dispatch(selectCurrentPortfolio(newValue));
+        console.log('меняю портфель: ', isFetching);
+        if (!isFetching) {
+            dispatch(selectCurrentPortfolio(newValue));
+        }
     };
 
     useEffect(() => {
+        console.log('isFetching global: ', isFetching);
+        
         dispatch(fetchExchangeRates());
     }, []);
 
@@ -53,7 +58,7 @@ const Portfolios: FC = () => {
                                     textColor="primary"
                                     onChange={handleSelectPortfolio}
                                 >
-                                    {list.map(l => <Tab key={l.id} label={l.name} value={l.id} />)}
+                                    {list.map(l => <Tab disabled={isFetching} key={l.id} label={l.name} value={l.id} />)}
                                 </Tabs>
                             </Paper>
                             <AddStockItemForm />

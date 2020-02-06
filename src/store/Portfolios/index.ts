@@ -91,6 +91,7 @@ const portfoliosSlice = createSlice({
         },
 
         requestPortfolioUpdate(state, action: PayloadAction<void>) {
+            state.isFetching = true;
             const index = getSelectedPortfolioIndex(state);
             state.list[index] = beginFetching(state.list[index]);
             state.list[index].savedItems = state.list[index].savedItems.map(item => beginFetching(item));
@@ -117,6 +118,13 @@ const portfoliosSlice = createSlice({
 
             state.list[index] = endFetching(state.list[index], apiLastError);
             state.isFetching = false;
+        },
+        abortUpdatig(state, action: PayloadAction<void>) {
+            state.isFetching = false;
+            const index = getSelectedPortfolioIndex(state);
+
+            state.list[index] = endFetching(state.list[index], 'Обновление было прервано');
+            state.list[index].savedItems = state.list[index].savedItems.map(item => endFetching(item, 'Обновление было прервано'));
         }
     }
 });
@@ -133,7 +141,7 @@ function getPortolioSum(savedItems: IStockItem[], rates: RatesMapping): number {
 
 const { actions, reducer } = portfoliosSlice;
 
-export const { recieveStockItemError, receiveApiError, createPortfolio, selectCurrentPortfolio, saveStockItem, recieveStockItemUpdate, requestPortfolioUpdate, receivePortfolioUpdate } = actions;
+export const { abortUpdatig, recieveStockItemError, receiveApiError, createPortfolio, selectCurrentPortfolio, saveStockItem, recieveStockItemUpdate, requestPortfolioUpdate, receivePortfolioUpdate } = actions;
 
 //для тестирования онли
 async function delay(delayInms: number) {

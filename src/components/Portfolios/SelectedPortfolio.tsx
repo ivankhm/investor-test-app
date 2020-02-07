@@ -6,13 +6,14 @@ import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../../store'
 import { IStockItem } from '../../store/Portfolios/types'
 import { fetchCurrentPortfolio, abortUpdatig } from '../../store/Portfolios'
+import useIsFetchingGlobal from '../../hooks/useIsFetchingGlobal';
 
 
 
 const SelectedPortfolio: React.FC = () => {
     const portfolio = useSelector(({ portfolios }: RootState) => portfolios.list.find(v => v.id === portfolios.currentPortfolioId));
-
-    const [openError, setOpenError] = React.useState(false);
+    const isFetchingGlobal = useIsFetchingGlobal();
+    const [openError, setOpenError] = useState(false);
 
     const [updateTimeout, setUpdateTimeout] = useState<number>(0);
 
@@ -51,14 +52,15 @@ const SelectedPortfolio: React.FC = () => {
     // -если не закончилось не запускать
     // - когда компонент анмаунтится - очистить таймер
     //
-    
+
     //один раз при анмаунте
     useEffect(() => {
         console.log('mounting - nothing');
-        
+
         //!portfolio?.isFetching && !updateTimeout && portfolio?.savedItems.length !== 0
 
         return () => {
+            console.log('unmouting-clear: ', updateTimeout);
             if (updateTimeout) {
                 console.log('clearing');
                 clearTimeout(updateTimeout);
@@ -74,15 +76,20 @@ const SelectedPortfolio: React.FC = () => {
         console.log('mounting - выставление таймаута');
         console.log('isFetching: ', portfolio?.isFetching);
         console.log('timeout: ', updateTimeout);
-        if (!portfolio!.isFetching && portfolio?.savedItems.length !== 0) {
+
+        if (!isFetchingGlobal && portfolio?.savedItems.length !== 0) {
+            console.log('setTimout: ', updateTimeout);
+            clearTimeout(updateTimeout);
+            setUpdateTimeout(0);
             setUpdateTimeout(
                 window.setTimeout(() => {
-                    console.log('setTimout');
+                    console.log('procked!');
+                    
                     dispatch(fetchCurrentPortfolio());
                 }, 10000)
             )
         }
-    }, [portfolio!.isFetching, portfolio!.id])
+    }, [isFetchingGlobal, portfolio!.id])
 
     //portfolio?.isFetching, updateTimeout, portfolio?.savedItems
     return (

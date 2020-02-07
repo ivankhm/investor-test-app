@@ -7,8 +7,8 @@ import { useDispatch } from 'react-redux';
 import { combineSearchAndItem } from '../../helpers/StoreTypeConverter';
 import { saveStockItem } from '../../store/Portfolios';
 
-const AddStockItemForm: FC = () => {
 
+const AddStockItemForm: FC = () => {
     const [typingTimeout, setTypingTimeout] = useState<number>(0);
     const [amount, setAmount] = useState(0)
     const [inputValue, setInputValue] = useState('');

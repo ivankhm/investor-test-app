@@ -1,16 +1,15 @@
-import React, { useState } from 'react'
+import React, { FC, useState } from 'react'
 import { Paper, Grid, TextField, Button } from '@material-ui/core'
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../../store';
 
 import { createPortfolio } from '../../store/Portfolios'
+import useIsFetchingGlobal from '../../hooks/useIsFetchingGlobal';
 
-interface Props {
 
-}
-
-const CreatePorfolioForm: React.FC<Props> = () => {
+const CreatePorfolioForm: FC = () => {
     const [portfolioName, setPortfolioName] = useState('');
+    const isFetchingGlobal = useIsFetchingGlobal();
 
     const dispatch: AppDispatch = useDispatch();
 
@@ -42,7 +41,7 @@ const CreatePorfolioForm: React.FC<Props> = () => {
 
                 </Grid>
                 <Grid item>
-                    <Button onClick={onSumbmit} variant="contained" size="medium" color="primary">Создать</Button>
+                    <Button disabled={isFetchingGlobal} onClick={onSumbmit} variant="contained" size="medium" color="primary">Создать</Button>
                 </Grid>
             </Grid>
         </Paper>

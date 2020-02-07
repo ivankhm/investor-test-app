@@ -8,6 +8,7 @@ import { IStockItem } from '../../store/Portfolios/types'
 import { fetchCurrentPortfolio, abortUpdatig } from '../../store/Portfolios'
 import useIsFetchingGlobal from '../../hooks/useIsFetchingGlobal';
 
+import DataBlock from './DataBlock';
 
 
 const SelectedPortfolio: React.FC = () => {
@@ -84,9 +85,9 @@ const SelectedPortfolio: React.FC = () => {
             setUpdateTimeout(
                 window.setTimeout(() => {
                     console.log('procked!');
-                    
+
                     dispatch(fetchCurrentPortfolio());
-                }, 10000)
+                }, 20000)
             )
         }
     }, [isFetchingGlobal, portfolio!.id])
@@ -125,17 +126,14 @@ const SelectedPortfolio: React.FC = () => {
                 spacing={2}
             >
                 <Grid item>
-                    <Typography color={(!portfolio?.didInvalidate && !portfolio?.isFetching) ? 'error' : 'initial'} variant="overline" display="block" gutterBottom>
-                        Рыночная стоимость портфеля
-                    </Typography>
-                    <Typography variant='h5'> {portfolio?.isFetching ? <CircularProgress size={24} /> : portfolio?.marketValue} RUB</Typography>
+                    <DataBlock color={(!portfolio?.didInvalidate && !portfolio?.isFetching) ? 'error' : 'initial'} title='Рыночная стоимость портфеля' >
+                        {portfolio?.isFetching ? <CircularProgress size={24} /> : portfolio?.marketValue} RUB
+                    </DataBlock>
                 </Grid>
                 <Grid item>
-                    <Typography variant="overline" display="block" gutterBottom>
-                        Процент изменения
-                    </Typography>
-                    <Typography variant='h5'> {portfolio?.deltaP} % </Typography>
-
+                    <DataBlock title='Процент изменения'>
+                    {portfolio?.deltaP} % 
+                    </DataBlock>
                 </Grid>
             </Grid>
 

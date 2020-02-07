@@ -9,16 +9,6 @@ import { updateStockItemFromRaw } from "../../helpers/StoreTypeConverter";
 import { RatesMapping } from "../../api/CBR/types";
 import { endFetching, beginFetching } from "../Base/FetchingBase";
 
-/**
-*  короч
-*    чо надо
-*
-*    portfolios
-*        selectCurrentPortfolio ?
-*        createPortfolio
-*
-*/
-
 function getSelectedPortfolio(state: IPortfoliosState) {
     return state.list.find(v => v.id === state.currentPortfolioId)!;
 }
@@ -26,7 +16,6 @@ function getSelectedPortfolio(state: IPortfoliosState) {
 function getSelectedPortfolioIndex(state: IPortfoliosState) {
     return state.list.findIndex(v => v.id === state.currentPortfolioId)!;
 }
-
 
 //PortfioMutations - изменяет параметр state - т.к. они используются внутри createSlicе, такая логика допустима благодоря Immer
 const portfoliosSlice = createSlice({
@@ -98,6 +87,9 @@ const portfoliosSlice = createSlice({
         },
 
         receivePortfolioUpdate(state, { payload }: PayloadAction<{ oldMarketValue: number, rates: RatesMapping }>) {
+            console.log('Обновление всего портфеля');
+            
+            
             const index = getSelectedPortfolioIndex(state);
             const portfolioState = state.list[index];
 
@@ -111,6 +103,8 @@ const portfoliosSlice = createSlice({
 
             state.list[index] = endFetching(portfolioState);
             state.isFetching = false;
+
+            console.log('Обновлененный state:', JSON.stringify(state));
         },
         receiveApiError(state, { payload: apiLastError }: PayloadAction<string | false>) {
             console.log('receiveapierror', apiLastError);
@@ -170,7 +164,7 @@ export const fetchCurrentPortfolio =
                 .map(async ({ symbol }) => {
 
                     //tsting
-                    await delay(5000 + Math.random() * 5000);
+                    await delay(2000 + Math.random() * 2000);
 
                     AlphaAdvantageApi.getQuoteEndpoint(symbol)
                         .then(({ data }) => {

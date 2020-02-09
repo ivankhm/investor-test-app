@@ -1,7 +1,7 @@
 import React, { FC, useState, useEffect } from 'react'
-import { RawSearchMatch, RawStockItem } from '../../../api/AlphaAdvantageApi/types';
+import { RawSearchMatch, RawStockItem } from '../../../api/AlphaVantageApi/types';
 import { Paper, Grid, TextField, Button, CircularProgress, Collapse, IconButton, Typography } from '@material-ui/core';
-import { getQuoteEndpoint } from '../../../api/AlphaAdvantageApi';
+import { getQuoteEndpoint } from '../../../api/AlphaVantageApi';
 import { useDispatch } from 'react-redux';
 import { combineSearchAndItem } from '../../../helpers/StoreTypeConverter';
 import { saveStockItem } from '../../../store/Portfolios';

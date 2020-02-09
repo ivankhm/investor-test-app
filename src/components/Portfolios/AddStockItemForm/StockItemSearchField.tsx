@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Autocomplete } from '@material-ui/lab';
-import { RawSearchMatch, WarningResult, RawSearchResult } from '../../../api/AlphaAdvantageApi/types';
+import { RawSearchMatch, WarningResult, RawSearchResult } from '../../../api/AlphaVantageApi/types';
 import { TextField, CircularProgress } from '@material-ui/core';
-import { getSymbolSearch } from '../../../api/AlphaAdvantageApi';
+import { getSymbolSearch } from '../../../api/AlphaVantageApi';
 
 interface IStockItemSearchFieldProps {
     value: RawSearchMatch | null,

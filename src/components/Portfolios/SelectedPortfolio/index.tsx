@@ -1,5 +1,5 @@
 import React from 'react'
-import { CircularProgress, Paper, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Collapse, Grid, makeStyles, Theme, createStyles } from '@material-ui/core'
+import { CircularProgress, Grid, makeStyles, Theme, createStyles } from '@material-ui/core'
 
 import ErrorMessage from './ErrorMessage'
 

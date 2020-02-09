@@ -1,4 +1,4 @@
-import { RawStockItem, RawSearchMatch } from "../api/AlphaAdvantageApi/types";
+import { RawStockItem, RawSearchMatch } from "../api/AlphaVantageApi/types";
 import { IStockItem, Currrency } from "../store/Portfolios/types";
 
 export function updateStockItemFromRaw(item: IStockItem, {'Global Quote': raw}: RawStockItem): IStockItem {

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { fetchCurrentPortfolio, abortUpdatig } from "../store/Portfolios";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../store";
@@ -7,17 +7,21 @@ import useIsFetchingGlobal from "./useIsFetchingGlobal";
 
 export default function usePortfolio() {
     const portfolio = useSelector(({ portfolios }: RootState) => portfolios.list.find(v => v.id === portfolios.currentPortfolioId))!;
+
     const dispatch = useDispatch();
     const isFetchingGlobal = useIsFetchingGlobal();
-    
+
     const updateTimout = useRef(0);
+
+    const currentPortfolioId = portfolio.id;
+    const numberOfItems = portfolio.savedItems.length
 
     useEffect(() => {
         console.log('effect: ', updateTimout.current);
-        if (!isFetchingGlobal && portfolio!.savedItems.length !== 0) {
+        if (!isFetchingGlobal && numberOfItems !== 0) {
             updateTimout.current = window.setTimeout(() => {
                 dispatch(fetchCurrentPortfolio());
-            }, 30000);
+            }, 15000);
             console.log('creating new timer: ', updateTimout.current);
         }
 
@@ -25,23 +29,22 @@ export default function usePortfolio() {
             console.log('clearing: ', updateTimout.current);
             window.clearTimeout(updateTimout.current);
         };
-    }, [portfolio!.id, isFetchingGlobal, portfolio!.savedItems.length])
+    }, [currentPortfolioId, isFetchingGlobal, numberOfItems, dispatch])
 
-    useEffect(() => {
-        console.log('SelectedPortfolio mount');
 
-        if (portfolio!.isFetching) {
+
+    const onClosePage = useCallback((ev: BeforeUnloadEvent) => {
+        if (isFetchingGlobal) {
             dispatch(abortUpdatig());
         }
+    }, [isFetchingGlobal, dispatch]);
 
+    useEffect(() => {
+        window.addEventListener("beforeunload", onClosePage);
         return () => {
-            console.log('SelectedPortfolio unmount');
-
-            if (portfolio!.isFetching) {
-                dispatch(abortUpdatig());
-            }
+            window.removeEventListener('beforeunload', onClosePage)
         };
-    }, [])
+    }, [dispatch, onClosePage])
 
     return {
         portfolio

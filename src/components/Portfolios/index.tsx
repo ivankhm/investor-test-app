@@ -21,10 +21,8 @@ const Portfolios: FC = () => {
     };
 
     useEffect(() => {
-        console.log('isFetching global: ', isFetching);
-
         dispatch(fetchExchangeRates());
-    }, []);
+    }, [dispatch]);
 
     return (
 

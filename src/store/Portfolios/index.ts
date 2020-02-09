@@ -1,9 +1,9 @@
 import { createSlice, PayloadAction, ThunkAction, Action } from "@reduxjs/toolkit"
 import { IPortfoliosState, IStockItem } from "./types";
 import uuid from "uuid/v4";
-import * as AlphaAdvantageApi from '../../api/AlphaAdvantageApi';
+import * as AlphaAdvantageApi from '../../api/AlphaVantageApi';
 
-import { RawStockItem, WarningResult } from "../../api/AlphaAdvantageApi/types";
+import { RawStockItem, WarningResult } from "../../api/AlphaVantageApi/types";
 import { RootState } from "..";
 import { updateStockItemFromRaw } from "../../helpers/StoreTypeConverter";
 import { RatesMapping } from "../../api/CBR/types";

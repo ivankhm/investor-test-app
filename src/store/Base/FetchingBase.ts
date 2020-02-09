@@ -9,7 +9,8 @@ export function beginFetching<T extends IFetchingBase>(state: T): T {
     return {
         ...state,
         isFetching: true,
-        didInvalidate: false
+        didInvalidate: false,
+        apiLastError: false
     }
 }
 

@@ -88,21 +88,22 @@ const portfoliosSlice = createSlice({
 
         receivePortfolioUpdate(state, { payload }: PayloadAction<{ oldMarketValue: number, rates: RatesMapping }>) {
             console.log('Обновление всего портфеля');
-            
-            
+
             const index = getSelectedPortfolioIndex(state);
             const portfolioState = state.list[index];
 
-            //сумма стоимости
-            portfolioState.marketValue = getPortolioSum(portfolioState.savedItems, payload.rates);
-
-            //  n - x y
-            //  x    100
-            //
-            portfolioState.deltaP = Math.round(((payload.oldMarketValue - portfolioState.marketValue) / (portfolioState.marketValue)) * 100) / 10000;
-
-            state.list[index] = endFetching(portfolioState);
+            state.list[index] = endFetching(portfolioState, portfolioState.apiLastError);
             state.isFetching = false;
+
+            if (portfolioState.apiLastError === false) {
+                //сумма стоимости
+                portfolioState.marketValue = getPortolioSum(portfolioState.savedItems, payload.rates);
+
+                //  n - x y
+                //  x    100
+                //
+                portfolioState.deltaP = Math.round(((payload.oldMarketValue - portfolioState.marketValue) / (portfolioState.marketValue)) * 100) / 10000;
+            }
 
             console.log('Обновлененный state:', JSON.stringify(state));
         },
@@ -164,9 +165,9 @@ export const fetchCurrentPortfolio =
                 .map(async ({ symbol }) => {
 
                     //tsting
-                    await delay(2000 + Math.random() * 2000);
+                    //await delay(2000 + Math.random() * 2000);
 
-                    AlphaAdvantageApi.getQuoteEndpoint(symbol)
+                    return AlphaAdvantageApi.getQuoteEndpoint(symbol)
                         .then(({ data }) => {
                             const warning = data as WarningResult;
                             console.log('updated: ', data);
@@ -196,6 +197,8 @@ export const fetchCurrentPortfolio =
             //-: безполезное свойство isFetching, пользователю меньше фидбека
 
             //ждем когда все обновятся
+            console.log('перед авейт');
+
             await Promise.all(stockItemsRequests);
             console.log('Дождались всех, изи бризи');
 

@@ -1,122 +1,33 @@
 import React, { useState, useEffect } from 'react'
-import { CircularProgress, Paper, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Typography, Collapse, IconButton, Grid } from '@material-ui/core'
-import { AlertTitle, Alert, Skeleton } from '@material-ui/lab'
-import CloseIcon from '@material-ui/icons/Close';
-import { useSelector, useDispatch } from 'react-redux'
-import { RootState } from '../../store'
+import { CircularProgress, Paper, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Collapse, Grid } from '@material-ui/core'
+import { Skeleton } from '@material-ui/lab'
 import { IStockItem } from '../../store/Portfolios/types'
-import { fetchCurrentPortfolio, abortUpdatig } from '../../store/Portfolios'
-import useIsFetchingGlobal from '../../hooks/useIsFetchingGlobal';
+
+import ErrorMessage from './ErrorMessage'
 
 import DataBlock from './DataBlock';
+import usePortfolio from '../../hooks/usePortfolio';
 
 
 const SelectedPortfolio: React.FC = () => {
-    const portfolio = useSelector(({ portfolios }: RootState) => portfolios.list.find(v => v.id === portfolios.currentPortfolioId));
-    const isFetchingGlobal = useIsFetchingGlobal();
+
+    const { portfolio } = usePortfolio();
     const [openError, setOpenError] = useState(false);
 
-    const [updateTimeout, setUpdateTimeout] = useState<number>(0);
-
-    const dispatch = useDispatch();
-
     useEffect(() => {
-        console.log('SelectedPortfolio mount');
+        console.log('apiError: ', portfolio.apiLastError);
 
-        if (portfolio!.isFetching) {
-            dispatch(abortUpdatig());
-        }
-
-        return () => {
-            console.log('SelectedPortfolio unmount');
-
-            if (portfolio!.isFetching) {
-                dispatch(abortUpdatig());
-            }
-        };
-    }, [])
-
-    useEffect(() => {
-        console.log('apiError: ', portfolio!.apiLastError);
-
-        if (portfolio!.apiLastError === false) {
+        if (portfolio.apiLastError === false) {
             setOpenError(false);
         } else {
             setOpenError(true);
         }
-    }, [portfolio!.apiLastError])
+    }, [portfolio.apiLastError, portfolio])
 
-    //todo: обновить условия, сейчас работает один раз и все
-    //так как оно надо
-    // did mount - запустить таймер
-    // -закончилось- обновление - запустить новый таймер
-    // -если не закончилось не запускать
-    // - когда компонент анмаунтится - очистить таймер
-    //
-
-    //один раз при анмаунте
-    useEffect(() => {
-        console.log('mounting - nothing');
-
-        //!portfolio?.isFetching && !updateTimeout && portfolio?.savedItems.length !== 0
-
-        return () => {
-            console.log('unmouting-clear: ', updateTimeout);
-            if (updateTimeout) {
-                console.log('clearing');
-                clearTimeout(updateTimeout);
-                setUpdateTimeout(0);
-            }
-        }
-    }, [portfolio!.id])
-
-
-
-    //много раз при обновлении
-    useEffect(() => {
-        console.log('mounting - выставление таймаута');
-        console.log('isFetching: ', portfolio?.isFetching);
-        console.log('timeout: ', updateTimeout);
-
-        if (!isFetchingGlobal && portfolio?.savedItems.length !== 0) {
-            console.log('setTimout: ', updateTimeout);
-            clearTimeout(updateTimeout);
-            setUpdateTimeout(0);
-            setUpdateTimeout(
-                window.setTimeout(() => {
-                    console.log('procked!');
-
-                    dispatch(fetchCurrentPortfolio());
-                }, 20000)
-            )
-        }
-    }, [isFetchingGlobal, portfolio!.id])
-
-    //portfolio?.isFetching, updateTimeout, portfolio?.savedItems
     return (
         <div>
             <Collapse in={openError}>
-                <Alert
-                    severity="error"
-                    action={
-                        <IconButton
-                            aria-label="close"
-                            color="inherit"
-                            size="small"
-                            onClick={() => {
-                                setOpenError(false);
-                            }}
-                        >
-                            <CloseIcon fontSize="inherit" />
-                        </IconButton>
-                    }
-                >
-                    <AlertTitle>Ошибочка!</AlertTitle>
-                    <p>Что-то пошло не так при работе с API, подробности:</p>
-                    <p>
-                        <strong>{portfolio!.apiLastError as string}</strong>
-                    </p>
-                </Alert>
+                <ErrorMessage message={portfolio!.apiLastError as string} onClose={()=>setOpenError(false)} />
             </Collapse>
             <Grid
                 container
@@ -126,13 +37,13 @@ const SelectedPortfolio: React.FC = () => {
                 spacing={2}
             >
                 <Grid item>
-                    <DataBlock color={(!portfolio?.didInvalidate && !portfolio?.isFetching) ? 'error' : 'initial'} title='Рыночная стоимость портфеля' >
-                        {portfolio?.isFetching ? <CircularProgress size={24} /> : portfolio?.marketValue} RUB
+                    <DataBlock color={(!portfolio.didInvalidate && !portfolio.isFetching) ? 'error' : 'initial'} title='Рыночная стоимость портфеля' >
+                        {portfolio.isFetching ? <CircularProgress size={24} /> : portfolio.marketValue} RUB
                     </DataBlock>
                 </Grid>
                 <Grid item>
                     <DataBlock title='Процент изменения'>
-                    {portfolio?.deltaP} % 
+                        {portfolio.deltaP} %
                     </DataBlock>
                 </Grid>
             </Grid>
@@ -151,7 +62,7 @@ const SelectedPortfolio: React.FC = () => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {portfolio?.savedItems.map((row: IStockItem) => (
+                        {portfolio.savedItems.map((row: IStockItem) => (
                             <TableRow selected={!row.didInvalidate && !row.isFetching} key={row.symbol}>
                                 <TableCell component="th" scope="row">
                                     {row.symbol}
@@ -159,19 +70,19 @@ const SelectedPortfolio: React.FC = () => {
                                 <TableCell align="right">{row.name}</TableCell>
                                 <TableCell align="right">{row.amount}</TableCell>
                                 {row.isFetching ? (
-                                    <React.Fragment>
+                                    <>
 
                                         <TableCell align="right"><Skeleton animation="wave" /></TableCell>
                                         <TableCell align="right"><Skeleton animation="wave" /></TableCell>
                                         <TableCell align="right"><Skeleton animation="wave" /></TableCell>
-                                    </React.Fragment>
+                                    </>
 
                                 ) : (
-                                        <React.Fragment>
+                                        <>
                                             <TableCell align="right">{row.currentPrice} {row.currency} </TableCell>
                                             <TableCell align="right">{row.marketValue} {row.currency}</TableCell>
                                             <TableCell align="right">{row.deltaP}</TableCell>
-                                        </React.Fragment>
+                                        </>
 
                                     )}
 

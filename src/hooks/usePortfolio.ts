@@ -17,7 +17,7 @@ export default function usePortfolio() {
         if (!isFetchingGlobal && portfolio!.savedItems.length !== 0) {
             updateTimout.current = window.setTimeout(() => {
                 dispatch(fetchCurrentPortfolio());
-            }, 10000);
+            }, 30000);
             console.log('creating new timer: ', updateTimout.current);
         }
 

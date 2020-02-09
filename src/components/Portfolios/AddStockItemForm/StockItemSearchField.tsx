@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Autocomplete } from '@material-ui/lab';
 import { RawSearchMatch, WarningResult, RawSearchResult } from '../../../api/AlphaAdvantageApi/types';
 import { TextField, CircularProgress } from '@material-ui/core';
@@ -11,48 +11,31 @@ interface IStockItemSearchFieldProps {
 }
 
 const StockItemSearchField: React.FunctionComponent<IStockItemSearchFieldProps> = (props) => {
-
-    const [typingTimeout, setTypingTimeout] = useState<number>(0);
-
     const [inputValue, setInputValue] = useState('');
-
     const [searchMatches, setSearchMatches] = useState<RawSearchMatch[]>([]);
-
     const [loading, setLoading] = useState(false);
 
+    const typingTimeout = useRef(0);
 
     useEffect(() => {
-        let active = true;
-
         if (inputValue === '') {
             setSearchMatches([]);
-            return undefined;
-        }
-
-        if (typingTimeout) {
-            clearTimeout(typingTimeout);
-        }
-
-        setTypingTimeout(window.setTimeout(
-            async () => {
-                if (active) {
+        } else {
+            typingTimeout.current = window.setTimeout(
+                async () => {
                     setLoading(true);
                     let { data } = await getSymbolSearch(inputValue);
                     if (!(data as WarningResult).Note) {
                         setSearchMatches((data as RawSearchResult).bestMatches || []);
                     }
                     setLoading(false);
-                }
-            },
-            500
-        ));
+                },
+                1000
+            );
+        }
 
         return () => {
-            active = false;
-            if (typingTimeout) {
-                clearTimeout(typingTimeout);
-            }
-
+            clearTimeout(typingTimeout.current);
         };
 
     }, [inputValue]);

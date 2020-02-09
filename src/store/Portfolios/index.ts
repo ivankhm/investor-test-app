@@ -107,7 +107,7 @@ const portfoliosSlice = createSlice({
 
             console.log('Обновлененный state:', JSON.stringify(state));
         },
-        receiveApiError(state, { payload: apiLastError }: PayloadAction<string | false>) {
+        receiveApiError(state, { payload: apiLastError }: PayloadAction<string>) {
             console.log('receiveapierror', apiLastError);
             const index = getSelectedPortfolioIndex(state);
 
@@ -170,14 +170,23 @@ export const fetchCurrentPortfolio =
                     return AlphaAdvantageApi.getQuoteEndpoint(symbol)
                         .then(({ data }) => {
                             const warning = data as WarningResult;
+                            const result = data as RawStockItem;
                             console.log('updated: ', data);
 
                             if (warning.Note) {
                                 dispatch(recieveStockItemError({ error: warning.Note, symbol }))
                                 throw warning.Note;
                             }
+                            //если 
+                            if (!result) {
+                                const message = `Не удалось привести тип ${typeof warning} к RawStockItem для символа ${symbol}. 
+                                    Сырой объект data: ${JSON.stringify(data)}
+                                `;
+                                console.log('Редкий случай! ', 'background: #222; color: #bada55');
+                                throw message;
+                            }
 
-                            dispatch(recieveStockItemUpdate(data as RawStockItem));
+                            dispatch(recieveStockItemUpdate(result));
                             //dispatch(receiveApiError(false));
                         })
                         .catch((error: string) => {

@@ -11,6 +11,9 @@ import DataBlock from '../DataBlock';
 import KeyboardArrowRightRoundedIcon from '@material-ui/icons/KeyboardArrowRightRounded';
 import KeyboardArrowDownRoundedIcon from '@material-ui/icons/KeyboardArrowDownRounded';
 
+const toNumber = (value: string) => Number(value ?? '0');
+const isUint = (value: string) => /^\d+$/.test(value);
+
 const AddStockItemForm: FC = () => {
     const isFetching = useIsFetchingGlobal();
     const [opened, setOpened] = useState(false);
@@ -41,15 +44,11 @@ const AddStockItemForm: FC = () => {
         cleanUp();
     }
 
-    const toNumber = (value: string) => Number(value ?? '0');
-
-    const isUint = (value: string) => /^\d+$/.test(value);
-
     const onSelectStockItem = (e: any, newValue: RawSearchMatch | null) => { setAmount('0'); setSelectedValue(newValue); }
 
     const onAmountTyping = (e: React.KeyboardEvent<HTMLDivElement>) => {
         console.log('key: ', e.key);
-        
+
         if (amount === '0' && isUint(e.key)) {
             setAmount('');
         }
@@ -62,9 +61,6 @@ const AddStockItemForm: FC = () => {
             getStockItemInfo(symbol!);
         }
     }, [selectedValue])
-
-    
-    
 
     return (
         <Paper>
@@ -90,15 +86,10 @@ const AddStockItemForm: FC = () => {
                         <StockItemSearchField value={selectedValue} onChange={onSelectStockItem} />
                     </Grid>
                     <Grid item xs={12} md={6}>
-                        <TextField
+                        <TextField size="small" label="Колличество" type="number" variant="outlined" required
                             style={{ width: 300 }}
-                            size="small"
-                            label="Колличество"
-                            type="number"
-                            variant="outlined"
-                            required
                             value={amount}
-                            error={ !isUint(amount) || (toNumber(amount) <= 0)  }
+                            error={!isUint(amount) || (toNumber(amount) <= 0)}
                             helperText='Введите целое положительное число'
                             onKeyDown={onAmountTyping}
                             onChange={e => setAmount(e.target.value)}
@@ -107,24 +98,23 @@ const AddStockItemForm: FC = () => {
                     </Grid>
                     <Grid item xs={12} md={6}>
                         <DataBlock title='Стоимость одной акции'>
-                            { loadingItem ? <CircularProgress size={24}/> : getSelectedPrice()} {selectedValue?.["8. currency"]}
+                            {loadingItem ? <CircularProgress size={24} /> : getSelectedPrice()} {selectedValue?.["8. currency"]}
                         </DataBlock>
                     </Grid>
                     <Grid item xs={12} md={6}>
                         <DataBlock title='Общая стоимость'>
-                            { amount && Math.round((toNumber(amount) * 100) * (Number(getSelectedPrice()) * 100 )/100)/100} {selectedValue?.["8. currency"]}
+                            {amount && Math.round((toNumber(amount) * 100) * (Number(getSelectedPrice()) * 100) / 100) / 100} {selectedValue?.["8. currency"]}
                         </DataBlock>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                        <Button onClick={_ => handleSubmit()} 
-                            disabled={!selectedValue || toNumber(amount) <= 0 || isFetching} 
+                        <Button onClick={_ => handleSubmit()}
+                            disabled={!selectedValue || toNumber(amount) <= 0 || isFetching}
                             variant="contained" size="medium" color="primary">
                             Добавить в портфель
                         </Button>
                     </Grid>
                 </Grid>
             </Collapse>
-
         </Paper>
     )
 }

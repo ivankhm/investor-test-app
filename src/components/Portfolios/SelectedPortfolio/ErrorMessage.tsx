@@ -1,17 +1,32 @@
-import * as React from 'react';
+
 import { AlertTitle, Alert } from '@material-ui/lab'
-import { IconButton } from '@material-ui/core';
+import { IconButton, Collapse } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
+import React, { useEffect, useState } from 'react';
 
 
 interface IErrorMessageProps {
-    message: string,
-    onClose?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void
+    errorMessage: string | false,
+    className?: string
 }
 
 const ErrorMessage: React.FC<IErrorMessageProps> = (props) => {
+
+    const [openError, setOpenError] = useState(false);
+
+    useEffect(() => {
+        console.log('apiError: ', props.errorMessage);
+
+        if (props.errorMessage === false) {
+            setOpenError(false);
+        } else {
+            setOpenError(true);
+        }
+    }, [props.errorMessage])
+
     return (
-        <>
+        <Collapse className={props.className} in={openError}>
+
             <Alert
                 severity="error"
                 action={
@@ -19,7 +34,7 @@ const ErrorMessage: React.FC<IErrorMessageProps> = (props) => {
                         aria-label="close"
                         color="inherit"
                         size="small"
-                        onClick={props.onClose}
+                        onClick={() => setOpenError(false)}
                     >
                         <CloseIcon fontSize="inherit" />
                     </IconButton>
@@ -28,11 +43,10 @@ const ErrorMessage: React.FC<IErrorMessageProps> = (props) => {
                 <AlertTitle>Произошла ошибка!</AlertTitle>
                 <p>Что-то пошло не так при работе с API, подробности:</p>
                 <p>
-                    <strong>{props.message}</strong>
+                    <strong>{props.errorMessage as string}</strong>
                 </p>
             </Alert>
-
-        </>
+        </Collapse>
     );
 };
 

@@ -8,7 +8,7 @@ import storage from 'redux-persist/lib/storage'
 
 import thunk from 'redux-thunk'
 import { exchangeRatesReducer } from './ExchangeRates'
-import { migrations } from './migrations'
+import { migrations, STORE_VERSION } from './migrations'
 
 //todo: добавить редукторы сюда
 const rootReducer = combineReducers({
@@ -18,7 +18,7 @@ const rootReducer = combineReducers({
 
 const persistConfig = {
     key: 'root',
-    version: 5,
+    version: STORE_VERSION,
     storage,
     migrate: createMigrate(migrations, { debug: false }),
 }

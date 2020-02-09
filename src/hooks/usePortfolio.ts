@@ -24,7 +24,7 @@ export default function usePortfolio() {
             }, 15000);
             console.log('creating new timer: ', updateTimout.current);
         }
-
+  
         return () => {
             console.log('clearing: ', updateTimout.current);
             window.clearTimeout(updateTimout.current);

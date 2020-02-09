@@ -1,5 +1,7 @@
 import { IPortfolioState } from "./Portfolios/types";
 import { ExchangeRates } from "./ExchangeRates/types";
+import { RatesMapping } from '../api/CBR/types'
+export const STORE_VERSION = 6;
 
 export const migrations = {
     2: (state: any) => {
@@ -39,7 +41,7 @@ export const migrations = {
         }
     },
     5: (state: any) => {
-        console.log('Migrating 4!');
+        console.log('Migrating 5!');
 
         return {
             ...state,
@@ -65,4 +67,14 @@ export const migrations = {
             } as IPortfolioState
         }
     },
+    6: (state: any) => {
+        return {
+            ...state,
+            exchangeRates: {
+                ...state.exchangeRates,
+                lastUpdated: 0,
+                rates: {} as RatesMapping
+            } as ExchangeRates
+        }
+    }
 }

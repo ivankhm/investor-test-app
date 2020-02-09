@@ -38,7 +38,7 @@ export default function LayoutDefault(props: ILayoutDefaultProps) {
         <div className={classes.root}>
             <ThemeProvider theme={theme} >
                 <CssBaseline />
-                <Header title="Инвестор пoнapoшкy" />
+                <Header title="Виртуальный инвестор" />
                 <Container className={classes.main} maxWidth="md" >
 
                     {props.children}

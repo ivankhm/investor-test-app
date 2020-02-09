@@ -1,6 +1,6 @@
 import React, { FC, useState, useEffect } from 'react'
 import { RawSearchMatch, RawStockItem } from '../../../api/AlphaVantageApi/types';
-import { Paper, Grid, TextField, Button, CircularProgress, Collapse, IconButton, Typography } from '@material-ui/core';
+import { Paper, Grid, TextField, Button, CircularProgress, Collapse } from '@material-ui/core';
 import { getQuoteEndpoint } from '../../../api/AlphaVantageApi';
 import { useDispatch } from 'react-redux';
 import { combineSearchAndItem } from '../../../helpers/StoreTypeConverter';
@@ -17,7 +17,7 @@ const isUint = (value: string) => /^\d+$/.test(value);
 const AddStockItemForm: FC = () => {
     const isFetching = useIsFetchingGlobal();
     const [opened, setOpened] = useState(false);
-    const [amount, setAmount] = useState<string>('0');
+    const [amount, setAmount] = useState<string>('1');
     const [selectedValue, setSelectedValue] = useState<RawSearchMatch | null>(null);
     const [newStockItem, setNewStockItem] = useState<RawStockItem | null>(null);
 
@@ -35,7 +35,7 @@ const AddStockItemForm: FC = () => {
     const cleanUp = () => {
         setSelectedValue(null);
         setNewStockItem(null);
-        setAmount('0');
+        setAmount('1');
     }
 
     const handleSubmit = () => {
@@ -44,7 +44,7 @@ const AddStockItemForm: FC = () => {
         cleanUp();
     }
 
-    const onSelectStockItem = (e: any, newValue: RawSearchMatch | null) => { setAmount('0'); setSelectedValue(newValue); }
+    const onSelectStockItem = (e: any, newValue: RawSearchMatch | null) => { setAmount('1'); setSelectedValue(newValue); }
 
     const onAmountTyping = (e: React.KeyboardEvent<HTMLDivElement>) => {
         console.log('key: ', e.key);
@@ -64,16 +64,14 @@ const AddStockItemForm: FC = () => {
 
     return (
         <Paper>
-
-            <Typography variant='subtitle1'>
-                <IconButton onClick={() => setOpened(!opened)}>
-                    {opened ?
-                        <KeyboardArrowDownRoundedIcon fontSize="inherit" /> :
-                        <KeyboardArrowRightRoundedIcon fontSize="inherit" />
-                    }
-                </IconButton>
+            <Button style={{ padding: 14 }} onClick={() => setOpened(!opened)}>
+                {opened ?
+                    <KeyboardArrowDownRoundedIcon fontSize="inherit" /> :
+                    <KeyboardArrowRightRoundedIcon fontSize="inherit" />
+                }
                 Добавить по названию
-            </Typography>
+            </Button>
+
             <Collapse in={opened}>
                 <Grid
                     container

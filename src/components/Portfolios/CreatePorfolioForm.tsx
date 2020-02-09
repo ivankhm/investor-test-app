@@ -32,7 +32,7 @@ const CreatePorfolioForm: FC = () => {
                     <TextField
                         style={{ width: 300 }}
                         size="small"
-                        label="Название нового портфолио"
+                        label="Название нового портфеля"
                         variant="outlined"
                         required
                         value={portfolioName}

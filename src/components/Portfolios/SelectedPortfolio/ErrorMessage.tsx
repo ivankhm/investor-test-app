@@ -1,5 +1,5 @@
 import { AlertTitle, Alert } from '@material-ui/lab'
-import { IconButton, Collapse } from '@material-ui/core';
+import { IconButton, Collapse, Grid } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import React, { useEffect, useState } from 'react';
 
@@ -23,9 +23,10 @@ const ErrorMessage: React.FC<IErrorMessageProps> = (props) => {
     }, [props.errorMessage])
 
     return (
-        <Collapse className={props.className} in={openError}>
+        <Collapse collapsedHeight={0} in={openError}>
 
             <Alert
+                className={props.className}
                 severity="error"
                 action={
                     <IconButton

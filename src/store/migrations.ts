@@ -68,6 +68,8 @@ export const migrations = {
         }
     },
     6: (state: any) => {
+        console.log('Migrating 6!');
+        
         return {
             ...state,
             exchangeRates: {

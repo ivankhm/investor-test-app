@@ -6,16 +6,19 @@ interface IDataBlockProps {
     children: React.ReactNode,
     color?: 'initial' | 'inherit' | 'primary' | 'secondary' | 'textPrimary' | 'textSecondary' | 'error',
     className?: string,
+    component?: any
 }
 
 const DataBlock: React.FunctionComponent<IDataBlockProps> = (props) => {
+    
+
     return (
-    <div className={props.className}>
-        <Typography color={props.color} variant="overline" display="block" gutterBottom>
-            {props.title}
-        </Typography>
-        <Typography variant='h5'> {props.children} </Typography>
-    </div>
+        <div className={props.className}>
+            <Typography color={props.color} variant="overline" display="block" gutterBottom>
+                {props.title}
+            </Typography>
+            <Typography variant='h5'> {props.children} </Typography>
+        </div>
     );
 };
 

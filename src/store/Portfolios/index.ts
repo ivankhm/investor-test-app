@@ -94,7 +94,8 @@ const portfoliosSlice = createSlice({
 
             state.list[index] = endFetching(portfolioState, portfolioState.apiLastError);
             state.isFetching = false;
-
+            console.log('apiLastError', portfolioState.apiLastError);
+            
             if (portfolioState.apiLastError === false) {
                 //сумма стоимости
                 portfolioState.marketValue = getPortolioSum(portfolioState.savedItems, payload.rates);
@@ -128,6 +129,10 @@ function getPortolioSum(savedItems: IStockItem[], rates: RatesMapping): number {
     const result = savedItems
         .map(i => {
             const { Value, Nominal } = rates[i.currency];
+            console.log('currency: ', i.currency);
+            console.log(Value);
+            console.log(Nominal);
+            
             return Math.round(((i.marketValue * 100) * (Value * 100) / Nominal) / 100) / 100;
         }) //переводим в рубли
         .reduce((acc, cur) => ((acc * 100) + (cur * 100)) / 100); //просто счтитаем сумму

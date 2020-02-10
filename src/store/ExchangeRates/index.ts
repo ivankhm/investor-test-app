@@ -58,7 +58,7 @@ export const fetchExchangeRates =
     (): ThunkAction<void, RootState, null, Action<string>> =>
         async (dispatch, getState) => {
             const currentDate = Date.now();
-            console.trace('проверка даты');
+            console.log('проверка даты, lastUpdated: ', getState().exchangeRates.lastUpdated);
             //
             if (currentDate - getState().exchangeRates.lastUpdated > UPDATE_TIMEOUT) {
                 console.log('старье - обновляем')

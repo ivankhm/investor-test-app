@@ -1,5 +1,5 @@
 import { AlertTitle, Alert } from '@material-ui/lab'
-import { IconButton, Collapse, Grid } from '@material-ui/core';
+import { IconButton, Collapse } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import React, { useEffect, useState } from 'react';
 

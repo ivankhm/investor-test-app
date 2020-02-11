@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../../store';
 
 import { createPortfolio } from '../../store/Portfolios'
-import useIsFetchingGlobal from '../../hooks/useIsFetchingGlobal';
+import {useIsFetchingGlobal} from '../../hooks/selectors';
 
 
 const CreatePorfolioForm: FC = () => {

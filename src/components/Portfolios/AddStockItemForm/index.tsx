@@ -6,7 +6,7 @@ import { useDispatch } from 'react-redux';
 import { combineSearchAndItem } from '../../../helpers/StoreTypeConverter';
 import { saveStockItem } from '../../../store/Portfolios';
 import StockItemSearchField from './StockItemSearchField';
-import useIsFetchingGlobal from '../../../hooks/useIsFetchingGlobal';
+import { useIsFetchingGlobal, useRates } from '../../../hooks/selectors';
 import DataBlock from '../DataBlock';
 import KeyboardArrowRightRoundedIcon from '@material-ui/icons/KeyboardArrowRightRounded';
 import KeyboardArrowDownRoundedIcon from '@material-ui/icons/KeyboardArrowDownRounded';
@@ -16,6 +16,8 @@ const isUint = (value: string) => /^\d+$/.test(value);
 
 const AddStockItemForm: FC = () => {
     const isFetching = useIsFetchingGlobal();
+    const rates = useRates();
+
     const [opened, setOpened] = useState(false);
     const [amount, setAmount] = useState<string>('1');
     const [selectedValue, setSelectedValue] = useState<RawSearchMatch | null>(null);
@@ -40,7 +42,7 @@ const AddStockItemForm: FC = () => {
 
     const handleSubmit = () => {
         const stockItem = combineSearchAndItem(selectedValue!, newStockItem!, toNumber(amount));
-        dispatch(saveStockItem(stockItem));
+        dispatch(saveStockItem({item: stockItem, rates}));
         cleanUp();
     }
 

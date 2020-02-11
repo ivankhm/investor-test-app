@@ -45,19 +45,20 @@ const portfoliosSlice = createSlice({
 
             state.currentPortfolioId = newId;
         },
-        saveStockItem(state, { payload }: PayloadAction<IStockItem>) {
+        saveStockItem(state, { payload: { item, rates } }: PayloadAction<{ item: IStockItem, rates: RatesMapping }>) {
             const portfolioState = getSelectedPortfolio(state);
             //туду сумму сделать
-            const index = portfolioState.savedItems.findIndex(v => v.symbol === payload.symbol);
+            const index = portfolioState.savedItems.findIndex(v => v.symbol === item.symbol);
 
             if (index === -1) {
-                portfolioState.savedItems.push(payload);
+                portfolioState.savedItems.push(item);
             } else {
-                portfolioState.savedItems[index].amount += payload.amount;
+                portfolioState.savedItems[index].amount += item.amount;
 
                 const { amount, currentPrice } = portfolioState.savedItems[index];
                 portfolioState.savedItems[index].marketValue = amount * currentPrice;
             }
+            portfolioState.marketValue = getPortolioSum(portfolioState.savedItems, rates);
         },
 
         recieveStockItemUpdate(state, { payload }: PayloadAction<RawStockItem>) {
@@ -86,24 +87,34 @@ const portfoliosSlice = createSlice({
             state.list[index].savedItems = state.list[index].savedItems.map(item => beginFetching(item));
         },
 
-        receivePortfolioUpdate(state, { payload }: PayloadAction<{ oldMarketValue: number, rates: RatesMapping }>) {
+        receivePortfolioUpdate(state, { payload: rates }: PayloadAction<RatesMapping>) {
             console.log('Обновление всего портфеля');
 
             const index = getSelectedPortfolioIndex(state);
-            const portfolioState = state.list[index];
 
-            state.list[index] = endFetching(portfolioState, portfolioState.apiLastError);
+            state.list[index] = endFetching(state.list[index], state.list[index].apiLastError);
             state.isFetching = false;
-            console.log('apiLastError', portfolioState.apiLastError);
-            
-            if (portfolioState.apiLastError === false) {
+            console.log('apiLastError', state.list[index].apiLastError);
+
+            if (state.list[index].apiLastError === false) {
                 //сумма стоимости
-                portfolioState.marketValue = getPortolioSum(portfolioState.savedItems, payload.rates);
+                state.list[index].marketValue = getPortolioSum(state.list[index].savedItems, rates);
+                console.log('newMarketValue: ', state.list[index].marketValue);
 
                 //  n - x y
                 //  x    100
                 //
-                portfolioState.deltaP = Math.round(((payload.oldMarketValue - portfolioState.marketValue) / (portfolioState.marketValue)) * 100) / 10000;
+                const { marketValue: newMarketValue } = state.list[index];
+                const oldMarketValue = getPortolioPrevSum(state.list[index].savedItems, rates);
+                console.log('oldMarketValue: ', oldMarketValue);
+                //
+                //
+                // c = n*a
+                // p = 1.5
+                // c1 = n*a*p
+                // c1/c = p
+                //
+                state.list[index].deltaP = Math.round(((newMarketValue - oldMarketValue) / newMarketValue) * 1000000) / 10000;
             }
 
             console.log('Обновлененный state:', JSON.stringify(state));
@@ -129,15 +140,31 @@ function getPortolioSum(savedItems: IStockItem[], rates: RatesMapping): number {
     const result = savedItems
         .map(i => {
             const { Value, Nominal } = rates[i.currency];
-            console.log('currency: ', i.currency);
-            console.log(Value);
-            console.log(Nominal);
-            
             return Math.round(((i.marketValue * 100) * (Value * 100) / Nominal) / 100) / 100;
         }) //переводим в рубли
         .reduce((acc, cur) => ((acc * 100) + (cur * 100)) / 100); //просто счтитаем сумму
-    return result;
+    //убираем знаки лишние
+    return Math.round(result * 100)/100;
 }
+
+
+function getPortolioPrevSum(savedItems: IStockItem[], rates: RatesMapping) {
+    return savedItems
+        .map(i => {
+            const { Value, Nominal } = rates[i.currency];
+            
+            //в рублях с двумя знаками после запятой ( * 100)
+            const inRub = Math.round(((i.marketValue * 100) * (Value * 100) / Nominal) / 100);
+            
+            //процент изменения, с отброшенными знаками после запятой
+            const deltaPx1000 = 100 - Math.round((parseFloat(i.deltaP) * 10000)) / 10000;
+            
+            //безопасное умножение, отбрасывание лишних знаков 
+            return Math.round((inRub * (deltaPx1000 * 100)) / 10000) / 100
+        })
+        .reduce((acc, cur) => ((acc * 100) + (cur * 100)) / 100);
+}
+
 
 const { actions, reducer } = portfoliosSlice;
 
@@ -158,7 +185,7 @@ export const fetchCurrentPortfolio =
             const state = getState().portfolios;
             const rates = getState().exchangeRates.rates;
 
-            const { savedItems, marketValue: oldMarketValue } = getSelectedPortfolio(state);
+            const { savedItems } = getSelectedPortfolio(state);
 
             console.table('Saved Items', savedItems);
 
@@ -179,11 +206,11 @@ export const fetchCurrentPortfolio =
                             console.log('updated: ', data);
 
                             if (warning.Note) {
-                                dispatch(recieveStockItemError({ error: warning.Note, symbol }))
                                 throw warning.Note;
                             }
+
                             //если 
-                            if (!result) {
+                            if (!result["Global Quote"]) {
                                 const message = `Не удалось привести тип ${typeof warning} к RawStockItem для символа ${symbol}. 
                                     Сырой объект data: ${JSON.stringify(data)}
                                 `;
@@ -197,7 +224,8 @@ export const fetchCurrentPortfolio =
                         .catch((error: string) => {
                             console.log('error: ', error);
 
-                            dispatch(receiveApiError(error));
+                            dispatch(recieveStockItemError({ error: error, symbol }))
+                            dispatch(receiveApiError(error.toString()));
                         });
 
                 });
@@ -217,7 +245,7 @@ export const fetchCurrentPortfolio =
             console.log('Дождались всех, изи бризи');
 
             //выключаем общий спинер, обновляем общую стоимость;
-            dispatch(receivePortfolioUpdate({ oldMarketValue, rates }));
+            dispatch(receivePortfolioUpdate(rates));
         }
 
 

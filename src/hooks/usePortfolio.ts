@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback } from "react";
 import { fetchCurrentPortfolio, abortUpdatig } from "../store/Portfolios";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../store";
-import useIsFetchingGlobal from "./useIsFetchingGlobal";
+import { useIsFetchingGlobal } from "./selectors";
 
 
 export default function usePortfolio() {
@@ -24,7 +24,7 @@ export default function usePortfolio() {
             }, 15000);
             console.log('creating new timer: ', updateTimout.current);
         }
-  
+
         return () => {
             console.log('clearing: ', updateTimout.current);
             window.clearTimeout(updateTimout.current);

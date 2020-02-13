@@ -1,24 +1,21 @@
 export interface IFetchingBase {
     isFetching: boolean,
-    didInvalidate: boolean, 
+    didInvalidate: boolean,
     apiLastError: string | false
 }
 
-
 export function beginFetching<T extends IFetchingBase>(state: T): T {
-    return {
-        ...state,
-        isFetching: true,
-        didInvalidate: false,
-        apiLastError: false
-    }
+    state.isFetching = true;
+    state.didInvalidate = false;
+    state.apiLastError = false;
+
+    return state;
 }
 
 export function endFetching<T extends IFetchingBase>(state: T, apiLastError: string | false = false): T {
-    return {
-        ...state,
-        isFetching: false,
-        didInvalidate: apiLastError === false,
-        apiLastError
-    }
+    state.isFetching = false;
+    state.didInvalidate = apiLastError === false;
+    state.apiLastError = apiLastError;
+
+    return state;
 }

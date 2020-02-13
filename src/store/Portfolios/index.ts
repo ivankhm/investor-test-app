@@ -1,30 +1,40 @@
-import { createSlice, PayloadAction, ThunkAction, Action } from "@reduxjs/toolkit"
-import { IPortfoliosState, IStockItem } from "./types";
+import { createSlice, PayloadAction, } from "@reduxjs/toolkit"
+import { IPortfoliosState, IStockItem, IPortfolioState } from "./types";
 import uuid from "uuid/v4";
 import * as AlphaAdvantageApi from '../../api/AlphaVantageApi';
 
 import { RawStockItem, WarningResult } from "../../api/AlphaVantageApi/types";
-import { RootState } from "..";
 import { updateStockItemFromRaw } from "../../helpers/StoreTypeConverter";
 import { RatesMapping } from "../../api/CBR/types";
 import { endFetching, beginFetching } from "../Base/FetchingBase";
+import { AppThunk } from "../types";
 
 function getSelectedPortfolio(state: IPortfoliosState) {
     return state.list.find(v => v.id === state.currentPortfolioId)!;
 }
 
-function getSelectedPortfolioIndex(state: IPortfoliosState) {
-    return state.list.findIndex(v => v.id === state.currentPortfolioId)!;
+export const initialState: IPortfoliosState = {
+    currentPortfolioId: '',
+    list: [],
+    isFetching: false
+}
+
+export const initialPortfolio: IPortfolioState = {
+    id: 'none',
+    name: 'none',
+    savedItems: [],
+    marketValue: 0,
+    deltaP: 0,
+
+    isFetching: false,
+    didInvalidate: true,
+    apiLastError: false
 }
 
 //PortfioMutations - изменяет параметр state - т.к. они используются внутри createSlicе, такая логика допустима благодоря Immer
 const portfoliosSlice = createSlice({
     name: 'portfolios',
-    initialState: {
-        currentPortfolioId: '',
-        list: [],
-        isFetching: false
-    } as IPortfoliosState,
+    initialState,
     reducers: {
         selectCurrentPortfolio(state, { payload: currentPortfolioId }: PayloadAction<string>) {
             state.currentPortfolioId = currentPortfolioId;
@@ -32,15 +42,9 @@ const portfoliosSlice = createSlice({
         createPortfolio(state, action: PayloadAction<string>) {
             const newId = uuid();
             state.list.push({
+                ...initialPortfolio,
                 id: newId,
                 name: action.payload,
-                savedItems: [],
-                marketValue: 0,
-                deltaP: 0,
-
-                isFetching: false,
-                didInvalidate: true,
-                apiLastError: false
             });
 
             state.currentPortfolioId = newId;
@@ -58,19 +62,15 @@ const portfoliosSlice = createSlice({
                 const { amount, currentPrice } = portfolioState.savedItems[index];
                 portfolioState.savedItems[index].marketValue = amount * currentPrice;
             }
-            portfolioState.marketValue = getPortolioSum(portfolioState.savedItems, rates);
+            updatePortfolioSumAndDelta(portfolioState, rates);
         },
 
-        recieveStockItemUpdate(state, { payload }: PayloadAction<RawStockItem>) {
-            const { savedItems } = getSelectedPortfolio(state);
+        recieveStockItemUpdate(state, { payload: rawItem}: PayloadAction<RawStockItem>) {
+            const { savedItems }   = getSelectedPortfolio(state);
+            const oldItemIndex = savedItems.findIndex(v => v.symbol === rawItem["Global Quote"]["01. symbol"]);
+            let newStockItem = updateStockItemFromRaw(savedItems[oldItemIndex], rawItem)
+            savedItems[oldItemIndex] = endFetching(newStockItem);;
 
-            const oldItemIndex = savedItems.findIndex(v => v.symbol === payload["Global Quote"]["01. symbol"]);
-
-            let newStockItem = updateStockItemFromRaw(savedItems[oldItemIndex], payload)
-
-            newStockItem = endFetching(newStockItem);
-
-            savedItems[oldItemIndex] = newStockItem;
         },
 
         recieveStockItemError(state, { payload }: PayloadAction<{ error: string, symbol: string }>) {
@@ -82,59 +82,50 @@ const portfoliosSlice = createSlice({
 
         requestPortfolioUpdate(state, action: PayloadAction<void>) {
             state.isFetching = true;
-            const index = getSelectedPortfolioIndex(state);
-            state.list[index] = beginFetching(state.list[index]);
-            state.list[index].savedItems = state.list[index].savedItems.map(item => beginFetching(item));
+            const portfolioSate = getSelectedPortfolio(state);
+            portfolioSate.savedItems = portfolioSate.savedItems.map(item => beginFetching(item));
+
+            beginFetching(portfolioSate);
         },
 
         receivePortfolioUpdate(state, { payload: rates }: PayloadAction<RatesMapping>) {
-            console.log('Обновление всего портфеля');
+            const portfolioSate = getSelectedPortfolio(state);
 
-            const index = getSelectedPortfolioIndex(state);
-
-            state.list[index] = endFetching(state.list[index], state.list[index].apiLastError);
+            endFetching(portfolioSate, portfolioSate.apiLastError);
             state.isFetching = false;
-            console.log('apiLastError', state.list[index].apiLastError);
-
-            if (state.list[index].apiLastError === false) {
+            
+            if (portfolioSate.apiLastError === false) {
                 //сумма стоимости
-                state.list[index].marketValue = getPortolioSum(state.list[index].savedItems, rates);
-                console.log('newMarketValue: ', state.list[index].marketValue);
-
-                //  n - x y
-                //  x    100
-                //
-                const { marketValue: newMarketValue } = state.list[index];
-                const oldMarketValue = getPortolioPrevSum(state.list[index].savedItems, rates);
-                console.log('oldMarketValue: ', oldMarketValue);
-                //
-                //
-                // c = n*a
-                // p = 1.5
-                // c1 = n*a*p
-                // c1/c = p
-                //
-                state.list[index].deltaP = Math.round(((newMarketValue - oldMarketValue) / newMarketValue) * 1000000) / 10000;
+                updatePortfolioSumAndDelta(portfolioSate, rates);
             }
-
-            console.log('Обновлененный state:', JSON.stringify(state));
         },
+
         receiveApiError(state, { payload: apiLastError }: PayloadAction<string>) {
             console.log('receiveapierror', apiLastError);
-            const index = getSelectedPortfolioIndex(state);
+            const portfolioSate = getSelectedPortfolio(state);
 
-            state.list[index] = endFetching(state.list[index], apiLastError);
-            state.isFetching = false;
+            portfolioSate.apiLastError = apiLastError;
+            portfolioSate.didInvalidate = false;
         },
-        abortUpdatig(state, action: PayloadAction<void>) {
-            state.isFetching = false;
-            const index = getSelectedPortfolioIndex(state);
 
-            state.list[index] = endFetching(state.list[index], 'Обновление было прервано');
-            state.list[index].savedItems = state.list[index].savedItems.map(item => endFetching(item, 'Обновление было прервано'));
+        abortUpdatig(state, action: PayloadAction<void>) {
+            const portfolioSate = getSelectedPortfolio(state);
+            const abortErrorMessage = 'Обновление было прервано';
+
+            state.isFetching = false;
+            endFetching(portfolioSate, abortErrorMessage);
+            portfolioSate.savedItems = portfolioSate.savedItems.map(item => endFetching(item, abortErrorMessage));
         }
     }
 });
+
+//Mutating portfolioState
+function updatePortfolioSumAndDelta(portfolioSate: IPortfolioState, rates: RatesMapping) {
+    const newMarketValue = getPortolioSum(portfolioSate.savedItems, rates);
+    
+    portfolioSate.marketValue = newMarketValue;        
+    portfolioSate.deltaP = getPortfolioDeltaP(newMarketValue, portfolioSate.savedItems, rates);
+}
 
 function getPortolioSum(savedItems: IStockItem[], rates: RatesMapping): number {
     const result = savedItems
@@ -144,27 +135,31 @@ function getPortolioSum(savedItems: IStockItem[], rates: RatesMapping): number {
         }) //переводим в рубли
         .reduce((acc, cur) => ((acc * 100) + (cur * 100)) / 100); //просто счтитаем сумму
     //убираем знаки лишние
-    return Math.round(result * 100)/100;
+    return Math.round(result * 100) / 100;
 }
-
 
 function getPortolioPrevSum(savedItems: IStockItem[], rates: RatesMapping) {
     return savedItems
         .map(i => {
             const { Value, Nominal } = rates[i.currency];
-            
+
             //в рублях с двумя знаками после запятой ( * 100)
             const inRub = Math.round(((i.marketValue * 100) * (Value * 100) / Nominal) / 100);
-            
+
             //процент изменения, с отброшенными знаками после запятой
             const deltaPx1000 = 100 - Math.round((parseFloat(i.deltaP) * 10000)) / 10000;
-            
+
             //безопасное умножение, отбрасывание лишних знаков 
             return Math.round((inRub * (deltaPx1000 * 100)) / 10000) / 100
         })
         .reduce((acc, cur) => ((acc * 100) + (cur * 100)) / 100);
 }
 
+function getPortfolioDeltaP(newMarketValue: number, savedItems: IStockItem[], rates: RatesMapping) {
+    const oldMarketValue = getPortolioPrevSum(savedItems, rates);
+            
+    return Math.round(((newMarketValue - oldMarketValue) / newMarketValue) * 1000000) / 10000;         
+}
 
 const { actions, reducer } = portfoliosSlice;
 
@@ -180,7 +175,7 @@ async function delay(delayInms: number) {
 }
 
 export const fetchCurrentPortfolio =
-    (): ThunkAction<void, RootState, null, Action<string>> =>
+    (): AppThunk<Promise<void>> =>
         async (dispatch, getState) => {
             const state = getState().portfolios;
             const rates = getState().exchangeRates.rates;

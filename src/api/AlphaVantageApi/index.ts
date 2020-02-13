@@ -3,7 +3,7 @@ import axios from 'axios'
 import { ApiParams, GlobalQuoteParams, SymbolSearchParams, SymbolSearchResult, GlobalQuoteResult } from './types';
 
 
-const config = {
+export const config = {
     apikey: '39LS35EIWF828AET',
     apiRoot: 'https://www.alphavantage.co/query'
 }

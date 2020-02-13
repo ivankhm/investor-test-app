@@ -1,22 +1,25 @@
-import { createSlice, PayloadAction, ThunkAction, Action } from "@reduxjs/toolkit"
+import { createSlice, PayloadAction, } from "@reduxjs/toolkit"
 import { ExchangeRates } from "./types";
-import { RootState } from "..";
+
 import { getExchangeRates } from "../../api/CBR";
 import { RatesMapping } from "../../api/CBR/types";
 import { beginFetching, endFetching } from '../Base/FetchingBase'
+import { AppThunk } from "../types";
 
 //день
 const UPDATE_TIMEOUT = 86400000;
 
+export const initialState: ExchangeRates = {
+    lastUpdated: 0,
+    rates: {},
+    isFetching: false,
+    didInvalidate: false,
+    apiLastError: false
+};
+
 const exchangeRatesSlice = createSlice({
     name: 'exchangeRates',
-    initialState: {
-        lastUpdated: 0,
-        rates: {},
-        isFetching: false,
-        didInvalidate: false,
-        apiLastError: false
-    } as ExchangeRates,
+    initialState,
     reducers: {
         requestRates(state, action: PayloadAction<void>) {
             return beginFetching(state);
@@ -39,10 +42,11 @@ const exchangeRatesSlice = createSlice({
                 }
             };
 
-            state = endFetching(state);
+            endFetching(state);
+
         },
-        reciveError(state, {payload: apiLastError}: PayloadAction<string | false>) {
-            return endFetching(state, apiLastError); 
+        reciveError(state, { payload: apiLastError }: PayloadAction<string | false>) {
+            return endFetching(state, apiLastError);
         }
     }
 });
@@ -55,25 +59,25 @@ export const exchangeRatesReducer = reducer;
 
 
 export const fetchExchangeRates =
-    (): ThunkAction<void, RootState, null, Action<string>> =>
+    (): AppThunk<Promise<void>> =>
         async (dispatch, getState) => {
             const currentDate = Date.now();
-            console.log('проверка даты, lastUpdated: ', getState().exchangeRates.lastUpdated);
-            //
+            
             if (currentDate - getState().exchangeRates.lastUpdated > UPDATE_TIMEOUT) {
-                console.log('старье - обновляем')
+                
                 dispatch(requestRates());
-                //await api then catch
-                getExchangeRates()
-                    .then(({ data }) => {
-                        if (!data.Valute) {
-                            throw data.toString();
-                        }
-                        dispatch(reciveRates(data.Valute));
 
-                    })
-                    .catch((error: string) => {
-                        dispatch(reciveError(error))
-                    })
+                try {
+                    const { data } = await getExchangeRates();
+
+                    if (!data.Valute) {
+                        throw `Ожидалисть обменные курсы, получено: ${JSON.stringify(data)}`;
+                    }
+                    
+                    dispatch(reciveRates(data.Valute));
+                } catch (error) {
+                    
+                    dispatch(reciveError(error.toString()))
+                }
             }
         };

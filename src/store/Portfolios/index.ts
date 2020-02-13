@@ -1,13 +1,15 @@
 import { createSlice, PayloadAction, } from "@reduxjs/toolkit"
 import { IPortfoliosState, IStockItem, IPortfolioState } from "./types";
 import uuid from "uuid/v4";
-import * as AlphaAdvantageApi from '../../api/AlphaVantageApi';
+import { getQuoteEndpoint } from '../../api/AlphaVantageApi';
+import { GlobalQuoteResult } from '../../api/AlphaVantageApi/types';
 
 import { RawStockItem, WarningResult } from "../../api/AlphaVantageApi/types";
 import { updateStockItemFromRaw } from "../../helpers/StoreTypeConverter";
 import { RatesMapping } from "../../api/CBR/types";
 import { endFetching, beginFetching } from "../Base/FetchingBase";
 import { AppThunk } from "../types";
+import { updatePortfolioSumAndDelta } from "./helpers";
 
 function getSelectedPortfolio(state: IPortfoliosState) {
     return state.list.find(v => v.id === state.currentPortfolioId)!;
@@ -65,8 +67,8 @@ const portfoliosSlice = createSlice({
             updatePortfolioSumAndDelta(portfolioState, rates);
         },
 
-        recieveStockItemUpdate(state, { payload: rawItem}: PayloadAction<RawStockItem>) {
-            const { savedItems }   = getSelectedPortfolio(state);
+        recieveStockItemUpdate(state, { payload: rawItem }: PayloadAction<RawStockItem>) {
+            const { savedItems } = getSelectedPortfolio(state);
             const oldItemIndex = savedItems.findIndex(v => v.symbol === rawItem["Global Quote"]["01. symbol"]);
             let newStockItem = updateStockItemFromRaw(savedItems[oldItemIndex], rawItem)
             savedItems[oldItemIndex] = endFetching(newStockItem);;
@@ -93,7 +95,7 @@ const portfoliosSlice = createSlice({
 
             endFetching(portfolioSate, portfolioSate.apiLastError);
             state.isFetching = false;
-            
+
             if (portfolioSate.apiLastError === false) {
                 //сумма стоимости
                 updatePortfolioSumAndDelta(portfolioSate, rates);
@@ -119,47 +121,6 @@ const portfoliosSlice = createSlice({
     }
 });
 
-//Mutating portfolioState
-function updatePortfolioSumAndDelta(portfolioSate: IPortfolioState, rates: RatesMapping) {
-    const newMarketValue = getPortolioSum(portfolioSate.savedItems, rates);
-    
-    portfolioSate.marketValue = newMarketValue;        
-    portfolioSate.deltaP = getPortfolioDeltaP(newMarketValue, portfolioSate.savedItems, rates);
-}
-
-function getPortolioSum(savedItems: IStockItem[], rates: RatesMapping): number {
-    const result = savedItems
-        .map(i => {
-            const { Value, Nominal } = rates[i.currency];
-            return Math.round(((i.marketValue * 100) * (Value * 100) / Nominal) / 100) / 100;
-        }) //переводим в рубли
-        .reduce((acc, cur) => ((acc * 100) + (cur * 100)) / 100); //просто счтитаем сумму
-    //убираем знаки лишние
-    return Math.round(result * 100) / 100;
-}
-
-function getPortolioPrevSum(savedItems: IStockItem[], rates: RatesMapping) {
-    return savedItems
-        .map(i => {
-            const { Value, Nominal } = rates[i.currency];
-
-            //в рублях с двумя знаками после запятой ( * 100)
-            const inRub = Math.round(((i.marketValue * 100) * (Value * 100) / Nominal) / 100);
-
-            //процент изменения, с отброшенными знаками после запятой
-            const deltaPx1000 = 100 - Math.round((parseFloat(i.deltaP) * 10000)) / 10000;
-
-            //безопасное умножение, отбрасывание лишних знаков 
-            return Math.round((inRub * (deltaPx1000 * 100)) / 10000) / 100
-        })
-        .reduce((acc, cur) => ((acc * 100) + (cur * 100)) / 100);
-}
-
-function getPortfolioDeltaP(newMarketValue: number, savedItems: IStockItem[], rates: RatesMapping) {
-    const oldMarketValue = getPortolioPrevSum(savedItems, rates);
-            
-    return Math.round(((newMarketValue - oldMarketValue) / newMarketValue) * 1000000) / 10000;         
-}
 
 const { actions, reducer } = portfoliosSlice;
 
@@ -174,74 +135,71 @@ async function delay(delayInms: number) {
     });
 }
 
-export const fetchCurrentPortfolio =
-    (): AppThunk<Promise<void>> =>
-        async (dispatch, getState) => {
-            const state = getState().portfolios;
-            const rates = getState().exchangeRates.rates;
+export const fetchCurrentPortfolio = (): AppThunk<Promise<void>> =>
+    async (dispatch, getState) => {
+        const state = getState().portfolios;
+        const rates = getState().exchangeRates.rates;
 
-            const { savedItems } = getSelectedPortfolio(state);
+        const { savedItems } = getSelectedPortfolio(state);
 
-            console.table('Saved Items', savedItems);
+        console.log('Saved Items: ', savedItems);
 
-            //включить спинер что мы обновляем
-            //и на каждой stockItem
-            dispatch(requestPortfolioUpdate())
+        //включить спинер что мы обновляем
+        //и на каждой stockItem
+        dispatch(requestPortfolioUpdate())
 
-            const stockItemsRequests = savedItems
-                .map(async ({ symbol }) => {
+        const stockItemsRequests = savedItems
+            .map(async ({ symbol }) => {
 
-                    //tsting
-                    //await delay(2000 + Math.random() * 2000);
+                //tsting
+                //await delay(2000 + Math.random() * 2000);
 
-                    return AlphaAdvantageApi.getQuoteEndpoint(symbol)
-                        .then(({ data }) => {
-                            const warning = data as WarningResult;
-                            const result = data as RawStockItem;
-                            console.log('updated: ', data);
+                try {
+                    const { data } = await getQuoteEndpoint(symbol);
 
-                            if (warning.Note) {
-                                throw warning.Note;
-                            }
+                    const warning = data as WarningResult;
+                    const result = data as RawStockItem;
 
-                            //если 
-                            if (!result["Global Quote"]) {
-                                const message = `Не удалось привести тип ${typeof warning} к RawStockItem для символа ${symbol}. 
+                    console.log('updated: ', data);
+
+                    if (warning.Note) {
+                        throw warning.Note;
+                    }
+
+                    if (!result["Global Quote"]) {
+                        const message = `Не удалось привести тип ${typeof warning} к RawStockItem для символа ${symbol}. 
                                     Сырой объект data: ${JSON.stringify(data)}
                                 `;
-                                console.log('Редкий случай! ', 'background: #222; color: #bada55');
-                                throw message;
-                            }
+                        console.log('Редкий случай! ', 'background: #222; color: #bada55');
+                        throw message;
+                    }
 
-                            dispatch(recieveStockItemUpdate(result));
-                            //dispatch(receiveApiError(false));
-                        })
-                        .catch((error: string) => {
-                            console.log('error: ', error);
+                    dispatch(recieveStockItemUpdate(result));
+                } catch (error) {
+                    dispatch(recieveStockItemError({ error: error, symbol }))
+                    dispatch(receiveApiError(error.toString()));
+                } finally {
+                    return Promise.resolve();
+                }
+            });
 
-                            dispatch(recieveStockItemError({ error: error, symbol }))
-                            dispatch(receiveApiError(error.toString()));
-                        });
+        //Обновлять каждый:
+        //+: красиво, 
+        //-: каждый раз пересоздается весь массив ватафак
 
-                });
+        //Обновлять все:
+        //+: одно изменение массива
+        //-: безполезное свойство isFetching, пользователю меньше фидбека
 
-            //Обновлять каждый:
-            //+: красиво, 
-            //-: каждый раз пересоздается весь массив ватафак
+        //ждем когда все обновятся
+        console.log('перед авейт');
 
-            //Обновлять все:
-            //+: одно изменение массива
-            //-: безполезное свойство isFetching, пользователю меньше фидбека
+        await Promise.all(stockItemsRequests);
+        console.log('Дождались всех, изи бризи');
 
-            //ждем когда все обновятся
-            console.log('перед авейт');
-
-            await Promise.all(stockItemsRequests);
-            console.log('Дождались всех, изи бризи');
-
-            //выключаем общий спинер, обновляем общую стоимость;
-            dispatch(receivePortfolioUpdate(rates));
-        }
+        //выключаем общий спинер, обновляем общую стоимость;
+        dispatch(receivePortfolioUpdate(rates));
+    }
 
 
 export const portfoliosReducer = reducer;

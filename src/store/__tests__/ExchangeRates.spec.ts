@@ -1,5 +1,6 @@
 import { initialState, requestRates, reciveRates, reciveError, fetchExchangeRates, exchangeRatesReducer } from '../ExchangeRates'
-import { RatesMapping } from '../../api/CBR/types';
+
+import { mockRates } from '../__models__/ExchangeRates';
 
 import configureMockStore from 'redux-mock-store'
 import thunk, { ThunkDispatch } from 'redux-thunk';
@@ -12,25 +13,21 @@ import MockAdapter from 'axios-mock-adapter'
 import axios from 'axios';
 
 
-
 type DispatchExts = ThunkDispatch<RootState, void, AnyAction>;
 
-const mockAxios = new MockAdapter(axios);
+
 const mockStore = configureMockStore<RootState, DispatchExts>([thunk]);
 
-export const mockRates: RatesMapping = {
-    'USD': {
-        ID: 'id1',
-        Name: 'Почти Американский Доллар',
-        NumCode: 'n1',
-        CharCode: 'USD',
-        Value: 1,
-        Previous: 1,
-        Nominal: 1
-    }
-}
+
 
 describe('ExchangeRates reducer', () => {
+
+    const mockAxios = new MockAdapter(axios);
+
+    afterAll(() => {
+        mockAxios.restore();
+    })
+
     it('should requestRates', () => {
         const state = {
             ...initialState,
@@ -103,12 +100,6 @@ describe('ExchangeRates reducer', () => {
     })
 
     describe('async actions', () => {
-        afterEach(() => {
-            mockAxios.reset();
-        })
-        afterAll(() => {
-            mockAxios.restore();
-        })
 
         it('should fetchExchangeRates success', async () => {
 

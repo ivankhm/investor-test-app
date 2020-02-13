@@ -1,7 +1,7 @@
-import { initialState, selectCurrentPortfolio, portfoliosReducer, createPortfolio, initialPortfolio, saveStockItem, recieveStockItemUpdate, recieveStockItemError, requestPortfolioUpdate, receivePortfolioUpdate, receiveApiError, abortUpdatig, fetchCurrentPortfolio } from "../Portfolios";
+import { initialState, selectCurrentPortfolio, portfoliosReducer, createPortfolio, initialPortfolio, saveStockItem, recieveStockItemUpdate, recieveStockItemError, requestPortfolioUpdate, receivePortfolioUpdate, receiveApiError, abortUpdatig, fetchCurrentPortfolio, wrongDataErrorMessage } from "../Portfolios";
 import { IPortfolioState, IStockItem } from "../Portfolios/types";
 //import { mockRates } from "./ExchangeRates.spec";
-import { RawStockItem, GlobalQuoteParams } from "../../api/AlphaVantageApi/types";
+import { GlobalQuoteParams } from "../../api/AlphaVantageApi/types";
 import thunk, { ThunkDispatch } from "redux-thunk";
 import { RootState } from "..";
 import { AnyAction } from "redux";
@@ -10,7 +10,6 @@ import configureMockStore from 'redux-mock-store'
 import axios from 'axios';
 import { config as apiConfig } from "../../api/AlphaVantageApi";
 import { initialState as initialRates } from '../ExchangeRates';
-import { RatesMapping } from "../../api/CBR/types";
 import { mockRates } from '../__models__/ExchangeRates';
 import { mockPortfolioId, mockState, mockChangingSate, mockAlmostChangedState } from "../__models__/Portfolios";
 import { mockItemNew, mockItemOld, mockRawStockItem } from "../__models__/StockItems";
@@ -80,6 +79,7 @@ describe('Portfolio reducer', () => {
                 })
         })
 
+        //todo: если item была не обновленной, то при суммировании нужно выставить didInvalidate = true
         it('should saveStockItem(existing), sum the amount and dont change percent', () => {
             expect(portfoliosReducer(mockState, saveStockItem({ item: mockItemOld, rates: mockRates })))
                 .toEqual({
@@ -93,6 +93,8 @@ describe('Portfolio reducer', () => {
                             savedItems: [
                                 {
                                     ...mockItemOld,
+                                    didInvalidate: true,
+                                    deltaP: '0.0000%',
                                     amount: 4,
                                     marketValue: 4.44
                                 }
@@ -102,6 +104,7 @@ describe('Portfolio reducer', () => {
                 })
         })
 
+        
         it('should recieveStockItemUpdate', () => {
 
 
@@ -249,30 +252,26 @@ describe('Portfolio reducer', () => {
                     }
                 ]
             })
-        const mockAxios = new MockAdapter(axios);
     })
 
     describe('async actions', () => {
 
         let mockAxios: MockAdapter;
 
+        const config = {
+            params: {
+                function: 'GLOBAL_QUOTE',
+                symbol: 'OI',
+                apikey: apiConfig.apikey
+            } as GlobalQuoteParams
+        }
+
         beforeAll(() => {
             mockAxios = new MockAdapter(axios);
         })
 
-
-        it('should fetchCurrentPortfolio', async () => {
-            //apiConfig
-            //const mockUrl = `${}`;//?function=GLOBAL_QUOTE&symbol=OI&apiKey=${apiConfig.apikey}`;
-
-            const config = {
-                params: {
-                    function: 'GLOBAL_QUOTE',
-                    symbol: 'OI',
-                    apikey: apiConfig.apikey
-                } as GlobalQuoteParams
-            }
-
+        it('should fetchCurrentPortfolio success', async () => {
+         
             mockAxios
                 .onGet(apiConfig.apiRoot, config)
                 .replyOnce(200, mockRawStockItem);
@@ -284,6 +283,70 @@ describe('Portfolio reducer', () => {
             });
 
             return store.dispatch(fetchCurrentPortfolio()).then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+            })
+        })
+        
+        it('should fetchCurrentPortfolio apiError', async () => {
+            const apiError = 'someAPIError';
+
+            mockAxios
+                .onGet(apiConfig.apiRoot, config)
+                .replyOnce(200, {
+                    Note: apiError
+                });
+
+            const expectedActions = [requestPortfolioUpdate(), recieveStockItemError({error: apiError, symbol: 'OI'}), receiveApiError(apiError), receivePortfolioUpdate(mockRates)];
+            const store = mockStore({
+                portfolios: mockState,
+                exchangeRates: mockRatesState
+            });
+
+            return store.dispatch(fetchCurrentPortfolio()).then(() => {
+                //console.log(store.getActions());
+                
+                expect(store.getActions()).toEqual(expectedActions);
+            })
+        })
+
+        it('should fetchCurrentPortfolio network error', async () => {
+            const networkError = Error('Network Error').toString();
+
+            mockAxios
+                .onGet(apiConfig.apiRoot, config)
+                .networkErrorOnce();
+
+            const expectedActions = [requestPortfolioUpdate(), recieveStockItemError({error: networkError, symbol: 'OI'}), receiveApiError(networkError), receivePortfolioUpdate(mockRates)];
+            const store = mockStore({
+                portfolios: mockState,
+                exchangeRates: mockRatesState
+            });
+
+            return store.dispatch(fetchCurrentPortfolio()).then(() => {
+                //console.log(store.getActions());
+                
+                expect(store.getActions()).toEqual(expectedActions);
+            })
+        })
+
+        it('should fetchCurrentPortfolio wrong data', async () => {
+            const wrongData = {
+                rubish: 'qwertyii'
+            }
+            const errorMessage = wrongDataErrorMessage(wrongData, 'OI');
+            mockAxios
+                .onGet(apiConfig.apiRoot, config)
+                .replyOnce(200, wrongData);
+
+            const expectedActions = [requestPortfolioUpdate(), recieveStockItemError({error: errorMessage, symbol: 'OI'}), receiveApiError(errorMessage), receivePortfolioUpdate(mockRates)];
+            const store = mockStore({
+                portfolios: mockState,
+                exchangeRates: mockRatesState
+            });
+
+            return store.dispatch(fetchCurrentPortfolio()).then(() => {
+                //console.log(store.getActions());
+                
                 expect(store.getActions()).toEqual(expectedActions);
             })
         })

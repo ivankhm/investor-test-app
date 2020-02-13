@@ -2,7 +2,6 @@ import { createSlice, PayloadAction, } from "@reduxjs/toolkit"
 import { IPortfoliosState, IStockItem, IPortfolioState } from "./types";
 import uuid from "uuid/v4";
 import { getQuoteEndpoint } from '../../api/AlphaVantageApi';
-import { GlobalQuoteResult } from '../../api/AlphaVantageApi/types';
 
 import { RawStockItem, WarningResult } from "../../api/AlphaVantageApi/types";
 import { updateStockItemFromRaw } from "../../helpers/StoreTypeConverter";
@@ -60,9 +59,13 @@ const portfoliosSlice = createSlice({
                 portfolioState.savedItems.push(item);
             } else {
                 portfolioState.savedItems[index].amount += item.amount;
-
+                
+                portfolioState.savedItems[index].didInvalidate = true;
+                portfolioState.savedItems[index].apiLastError = false;
+                portfolioState.savedItems[index].deltaP = item.deltaP;
+                
                 const { amount, currentPrice } = portfolioState.savedItems[index];
-                portfolioState.savedItems[index].marketValue = amount * currentPrice;
+                portfolioState.savedItems[index].marketValue = (amount * (currentPrice * 100))/100;
             }
             updatePortfolioSumAndDelta(portfolioState, rates);
         },
@@ -103,7 +106,7 @@ const portfoliosSlice = createSlice({
         },
 
         receiveApiError(state, { payload: apiLastError }: PayloadAction<string>) {
-            console.log('receiveapierror', apiLastError);
+            //console.log('receiveapierror', apiLastError);
             const portfolioSate = getSelectedPortfolio(state);
 
             portfolioSate.apiLastError = apiLastError;
@@ -127,12 +130,17 @@ const { actions, reducer } = portfoliosSlice;
 export const { abortUpdatig, recieveStockItemError, receiveApiError, createPortfolio, selectCurrentPortfolio, saveStockItem, recieveStockItemUpdate, requestPortfolioUpdate, receivePortfolioUpdate } = actions;
 
 //для тестирования онли
-async function delay(delayInms: number) {
-    return new Promise(resolve => {
-        setTimeout(() => {
-            resolve(2);
-        }, delayInms);
-    });
+// async function delay(delayInms: number) {
+//     return new Promise(resolve => {
+//         setTimeout(() => {
+//             resolve(2);
+//         }, delayInms);
+//     });
+// }
+
+export function wrongDataErrorMessage(data: any, symbol: string) {
+    return `Не удалось привести тип ${typeof data} к RawStockItem для символа ${symbol}. 
+            Сырой объект data: ${JSON.stringify(data)}`;
 }
 
 export const fetchCurrentPortfolio = (): AppThunk<Promise<void>> =>
@@ -141,8 +149,6 @@ export const fetchCurrentPortfolio = (): AppThunk<Promise<void>> =>
         const rates = getState().exchangeRates.rates;
 
         const { savedItems } = getSelectedPortfolio(state);
-
-        console.log('Saved Items: ', savedItems);
 
         //включить спинер что мы обновляем
         //и на каждой stockItem
@@ -160,23 +166,20 @@ export const fetchCurrentPortfolio = (): AppThunk<Promise<void>> =>
                     const warning = data as WarningResult;
                     const result = data as RawStockItem;
 
-                    console.log('updated: ', data);
+                    //console.log('updated: ', data);
 
                     if (warning.Note) {
                         throw warning.Note;
                     }
 
                     if (!result["Global Quote"]) {
-                        const message = `Не удалось привести тип ${typeof warning} к RawStockItem для символа ${symbol}. 
-                                    Сырой объект data: ${JSON.stringify(data)}
-                                `;
-                        console.log('Редкий случай! ', 'background: #222; color: #bada55');
-                        throw message;
+                        
+                        throw wrongDataErrorMessage(data, symbol);
                     }
 
                     dispatch(recieveStockItemUpdate(result));
                 } catch (error) {
-                    dispatch(recieveStockItemError({ error: error, symbol }))
+                    dispatch(recieveStockItemError({ error: error.toString(), symbol }))
                     dispatch(receiveApiError(error.toString()));
                 } finally {
                     return Promise.resolve();
@@ -192,11 +195,7 @@ export const fetchCurrentPortfolio = (): AppThunk<Promise<void>> =>
         //-: безполезное свойство isFetching, пользователю меньше фидбека
 
         //ждем когда все обновятся
-        console.log('перед авейт');
-
         await Promise.all(stockItemsRequests);
-        console.log('Дождались всех, изи бризи');
-
         //выключаем общий спинер, обновляем общую стоимость;
         dispatch(receivePortfolioUpdate(rates));
     }

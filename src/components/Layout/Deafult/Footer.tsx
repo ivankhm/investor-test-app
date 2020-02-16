@@ -40,7 +40,7 @@ export default function Footer(props: IFooterProps) {
     <footer className={props.classes}>
       <Container maxWidth="md">
         <Typography variant="body1">
-          Это сделал Иван Хмелевский с помощью:
+          Это сделал Иван Хмелевский с помощью: {' '}
             {
             links.map(
               (l, i: number) => {

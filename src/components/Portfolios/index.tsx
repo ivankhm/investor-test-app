@@ -3,7 +3,7 @@ import { Tabs, Tab, Paper, Grid } from '@material-ui/core';
 import { useSelector, useDispatch } from 'react-redux'
 import CreatePorfolioForm from './CreatePorfolioForm';
 import { RootState } from '../../store';
-import { selectCurrentPortfolio } from '../../store/Portfolios';
+import { selectCurrentPortfolio, abortUpdatig } from '../../store/Portfolios';
 import AddStockItemForm from './AddStockItemForm';
 import SelectedPortfolio from './SelectedPortfolio';
 import { Alert, AlertTitle } from '@material-ui/lab';
@@ -21,6 +21,7 @@ const Portfolios: FC = () => {
     };
 
     useEffect(() => {
+        dispatch(abortUpdatig());
         dispatch(fetchExchangeRates());
     }, [dispatch]);
 

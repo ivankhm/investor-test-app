@@ -29,6 +29,7 @@ const StockItemSearchField: React.FunctionComponent<IStockItemSearchFieldProps> 
                         setSearchMatches((data as RawSearchResult).bestMatches || []);
                     }
                     setLoading(false);
+
                 },
                 1000
             );
@@ -63,7 +64,7 @@ const StockItemSearchField: React.FunctionComponent<IStockItemSearchFieldProps> 
                         ...params.InputProps,
                         endAdornment: (
                             <React.Fragment>
-                                {loading ? <CircularProgress color="inherit" size={20} /> : null}
+                                {loading && <CircularProgress color="inherit" size={20} />}
                                 {params.InputProps.endAdornment}
                             </React.Fragment>
                         )

@@ -1,14 +1,17 @@
 import React from 'react';
-import {render} from '@testing-library/react';
+
+import { shallow } from 'enzyme';
+
 import Header from '../Header';
+import { Typography } from '@material-ui/core';
 
 
 describe('<Header/>', () => {
     it('should render the title', () => {
         const mockTitle = 'Some Title';
-        const header = render(<Header title={mockTitle}/>);
-        const title = header.getByTestId('header-title').textContent;
-
+        const header = shallow(<Header title={mockTitle} />);
+        const title = header.find(Typography).prop('children')
+        
         expect(header).toBeTruthy();
         expect(title).toEqual(mockTitle);
     });

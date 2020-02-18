@@ -29,6 +29,8 @@ const AddStockItemForm: FC = () => {
     const getStockItemInfo = async (symbol: string) => {
         setLodingItem(true);
         const { data } = await getQuoteEndpoint(symbol);
+        console.log('data: ', data);
+        
         setNewStockItem(data as RawStockItem);
         setLodingItem(false);
     }
@@ -108,6 +110,7 @@ const AddStockItemForm: FC = () => {
                     </Grid>
                     <Grid item xs={12} md={6}>
                         <Button onClick={_ => handleSubmit()}
+                            id='add-item-button'
                             disabled={!selectedValue || toNumber(amount) <= 0 || isFetching}
                             variant="contained" size="medium" color="primary">
                             Добавить в портфель

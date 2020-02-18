@@ -21,7 +21,6 @@ const Portfolios: FC = () => {
     };
 
     useEffect(() => {
-        dispatch(abortUpdatig());
         dispatch(fetchExchangeRates());
     }, [dispatch]);
 

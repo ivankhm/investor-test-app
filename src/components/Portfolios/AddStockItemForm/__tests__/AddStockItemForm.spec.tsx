@@ -69,7 +69,7 @@ describe('<AddStockItemForm />', () => {
     const container = mount(<AddStockItemForm />);
     let priceDataBlock = container.find("DataBlock[title='Стоимость одной акции']");
     let buttonSubmit = container.find(Collapse).find(Button);
-    
+
     beforeEach(() => {
         mockAxios = new MockAdapter(axios);
     })
@@ -88,7 +88,7 @@ describe('<AddStockItemForm />', () => {
             .replyOnce(200, mockRawStockItem);
 
         const autocomplete = container.find(StockItemSearchField);
-        
+
 
         expect(buttonSubmit.prop('disabled'))
             .toEqual(true);
@@ -99,31 +99,27 @@ describe('<AddStockItemForm />', () => {
 
 
         await act(async () => {
-
             autocomplete.prop('onChange')({}, mockSearchMatch);
-
-            console.log('setpr 1', priceDataBlock.prop('children'));
-
             await Promise.resolve(container.setProps({}));
-
-            priceDataBlock = container.find("DataBlock[title='Стоимость одной акции']")
-            expect(priceDataBlock.prop('children'))
-                .not.toEqual(['0', ' ', undefined]);
         })
+
+        priceDataBlock = container.find("DataBlock[title='Стоимость одной акции']")
+        expect(priceDataBlock.prop('children'))
+            .not.toEqual(['0', ' ', undefined]);
 
         await act(async () => {
             await Promise.resolve(container.setProps({}));
-
-            priceDataBlock = container.find("DataBlock[title='Стоимость одной акции']")
-            console.log('act 2: ', priceDataBlock.prop('children'));
-            expect(priceDataBlock.prop('children'))
-                .toEqual([2.22, ' ', 'usd']);
-
-            buttonSubmit = container.find(Collapse).find(Button);
-
-            expect(buttonSubmit.prop('disabled'))
-                .toEqual(false);
         })
+
+        priceDataBlock = container.find("DataBlock[title='Стоимость одной акции']")
+        console.log('act 2: ', priceDataBlock.prop('children'));
+        expect(priceDataBlock.prop('children'))
+            .toEqual([2.22, ' ', 'usd']);
+
+        buttonSubmit = container.find(Collapse).find(Button);
+
+        expect(buttonSubmit.prop('disabled'))
+            .toEqual(false);
 
     });
 
@@ -132,7 +128,7 @@ describe('<AddStockItemForm />', () => {
 
             buttonSubmit.simulate('click');
             expect(mockDispatch).toBeCalledTimes(1);
-            expect(mockDispatch).toBeCalledWith( saveStockItem({
+            expect(mockDispatch).toBeCalledWith(saveStockItem({
                 item: combineSearchAndItem(mockSearchMatch, mockRawStockItem, 1),
                 rates: mockRates
             }))

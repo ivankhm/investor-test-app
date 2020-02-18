@@ -1,44 +1,46 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Тестовое задание "Виртуальный портфель"
 
-## Available Scripts
+## Использование
+Можно создать несколько портфелей и добавлять в них ценные бумаги. Искать бумаги можно по названию или символу. Каждые 30 секунд акции обновляют свою стоимость и процент роста. При ошибке сети/api информация корректно выводится пользователю.
 
-In the project directory, you can run:
+## Ограничения
+### Ограничения использования
+* Сумма портфеля выводится в рублях, и у пользоавтеля нет возможности поменять валюту. Технических припятствий для реализации этой фитчи нету, просто в техническом задании её не было. Сумма считается корректно на основе курсов валют подгружаемых по api.
+* Процент изменения портфолио считается на основе новых значений `change percent` при обновлении акции, а не сравнении предыдущей сумы и текущей. Был выбор - самостоятельно высчитывать процент каждые 30 секунд на основе дневного отчета от api [AlphaVantage](https://www.alphavantage.co/documentation/) или использовать метод `GlobalQuote` для получения готового процента. Оба варианта нормальные, но второй менее ресурсозатратный. 
+* Т.к. api бесплатный, максимальное число запросов в день по api ключу - 500, а в минуту - 5. из-за этого при превыщении лимита показывается алерт с сообщением об ошибке.
 
-### `npm start`
+### Ограничения тестирования
 
-Runs the app in the development mode.<br />
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Не все компоненты и хуки протестированны, т.к. `enzyme` крайне странно обращается с функциональными компонентами, и хук `useEffect` не всегда корректно срабатывает. Так-же метод `wrapper.update()` не ререндерит компонент, приходится использовать `wrapper.setProps({})`, который может внести не все изменения в компонент. В официальной документации рекомендуют оборачивать такие выражения в функцию `act`, однако в чистом виде это просто *не работает*.
 
-The page will reload if you make edits.<br />
-You will also see any lint errors in the console.
+На GitHub enzyme до сих пор открыт [issue]() по этому вопросу.
+Способ который я использовал для тестирования *async* логики использует `await Promise.resolve(wrapper.setProps({}))`, чего я лично не нашел в документации, и сама идея была предложена на [вот этом ответе]() на SO. Если делать `await` над функцией `act`, а потом внутри нее `await` над промисом, который резолвит новый враппер - обновление случается корректно. Иначе, оно случается уже после завершения теста.
+```javascript
+/* AddStockItemForm.spec.tsx */
 
-### `npm test`
+const autocomplete = container.find(StockItemSearchField);
+/* работает */
+await act(async () => {
+    autocomplete.prop('onChange')({}, mockSearchMatch);
+    await Promise.resolve(container.setProps({}));
+    /* случился *один* ререндер после начала ожидаия async функции */
+    /* при последуюющих вызовах srtProps({}) будет произой */
+})
 
-Launches the test runner in the interactive watch mode.<br />
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+/* НЕ работает */
+act(() => {
+    autocomplete.prop('onChange')({}, mockSearchMatch);
+    container.setProps({});
+})
 
-### `npm run build`
+```
+Возможно я не прав, но т.к. такой подход не документирован, он не очень надежный. Есть вероятность, что тест работает просто потому, что все эти операции занимают время, поэтому все действия функции успевают выполнится.
 
-Builds the app for production to the `build` folder.<br />
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Redux редюсеры протестированы в полной мере, с ними проблем нет.
 
-The build is minified and the filenames include the hashes.<br />
-Your app is ready to be deployed!
+### Ограничения реализации
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+По сути, здесь я опишу неудачные решения на стадии проектирования. 
 
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (Webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+1. Стоило использоватиль одну из библиотек по работе с валютами. Я понял это слишком поздно, поэтому внедрение такой библиотеки было бы слишком затратно по времени. Все операции я выполнял, "передвигая" знак запятой так, чтобы не осталось дробной части, выполнял действие/округления и возвращал его обратно.
+2. Стоило использовать Redux-Saga, а не Thunk как midleware для редукторов, так-как первый намного проще в тестировании.

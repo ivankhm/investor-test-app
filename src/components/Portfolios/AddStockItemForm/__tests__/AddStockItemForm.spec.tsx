@@ -89,14 +89,11 @@ describe('<AddStockItemForm />', () => {
 
         const autocomplete = container.find(StockItemSearchField);
 
-
         expect(buttonSubmit.prop('disabled'))
             .toEqual(true);
 
-
         expect(priceDataBlock.prop('children'))
             .toEqual(['0', ' ', undefined]);
-
 
         await act(async () => {
             autocomplete.prop('onChange')({}, mockSearchMatch);

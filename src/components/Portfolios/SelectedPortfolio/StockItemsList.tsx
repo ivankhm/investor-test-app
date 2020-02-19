@@ -9,7 +9,6 @@ interface IStockItemsListProps {
 }
 
 const StockItemsList: React.FunctionComponent<IStockItemsListProps> = (props) => {
-
     return (
         <TableContainer className={props.className} component={Paper}>
             <Table size="small" >
@@ -21,7 +20,6 @@ const StockItemsList: React.FunctionComponent<IStockItemsListProps> = (props) =>
                         <TableCell align="right">Цена одной акции</TableCell>
                         <TableCell align="right">Рыночная стоимость</TableCell>
                         <TableCell align="right">Индикатор изменения</TableCell>
-
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -48,8 +46,6 @@ const StockItemsList: React.FunctionComponent<IStockItemsListProps> = (props) =>
                                     </>
 
                                 )}
-
-
                         </TableRow>
                     ))}
                 </TableBody>

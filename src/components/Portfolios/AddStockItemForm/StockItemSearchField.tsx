@@ -38,7 +38,6 @@ const StockItemSearchField: React.FunctionComponent<IStockItemSearchFieldProps> 
         return () => {
             clearTimeout(typingTimeout.current);
         };
-
     }, [inputValue]);
 
     return (
@@ -69,7 +68,6 @@ const StockItemSearchField: React.FunctionComponent<IStockItemSearchFieldProps> 
                             </React.Fragment>
                         )
                     }}
-
                 />
             )}
         />

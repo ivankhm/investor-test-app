@@ -1,6 +1,6 @@
 import { initialState, selectCurrentPortfolio, portfoliosReducer, createPortfolio, initialPortfolio, saveStockItem, recieveStockItemUpdate, recieveStockItemError, requestPortfolioUpdate, receivePortfolioUpdate, receiveApiError, abortUpdatig, fetchCurrentPortfolio, wrongDataErrorMessage } from "../Portfolios";
 import { IPortfolioState, IStockItem } from "../Portfolios/types";
-//import { mockRates } from "./ExchangeRates.spec";
+
 import { GlobalQuoteParams } from "../../api/AlphaVantageApi/types";
 import thunk, { ThunkDispatch } from "redux-thunk";
 import { RootState } from "..";
@@ -106,10 +106,6 @@ describe('Portfolio reducer', () => {
 
         
         it('should recieveStockItemUpdate', () => {
-
-
-
-
             expect(portfoliosReducer(mockChangingSate, recieveStockItemUpdate(mockRawStockItem)))
                 .toEqual({
                     ...mockChangingSate,
@@ -303,8 +299,6 @@ describe('Portfolio reducer', () => {
             });
 
             return store.dispatch(fetchCurrentPortfolio()).then(() => {
-                //console.log(store.getActions());
-                
                 expect(store.getActions()).toEqual(expectedActions);
             })
         })
@@ -345,8 +339,6 @@ describe('Portfolio reducer', () => {
             });
 
             return store.dispatch(fetchCurrentPortfolio()).then(() => {
-                //console.log(store.getActions());
-                
                 expect(store.getActions()).toEqual(expectedActions);
             })
         })

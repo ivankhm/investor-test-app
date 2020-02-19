@@ -15,15 +15,6 @@ const useStyles = makeStyles((theme: Theme) =>
     }),
 );
 
-// nn/100 = 0.nn
-// a1 = 5                   
-// a2 = 10
-// 10-5 = 5 5 /10 = 0.5 * 100 = 50%
-//  pa                  pb                     pc
-// (a2-a1) / a2 * 100  (b2-b1) / b2 * 100     (a2-a1) + (b2-b1) / (a2+b2) * 100
-// c2 = a2 + b2
-// c1 = a1 + b1 
-//(a2+b2) - (a1+b1) / (a2+b2) * 100
 const SelectedPortfolio: React.FC = () => {
     const classes = useStyles();
     const { portfolio } = usePortfolio();

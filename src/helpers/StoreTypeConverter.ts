@@ -3,7 +3,6 @@ import { IStockItem, Currrency } from "../store/Portfolios/types";
 
 export function updateStockItemFromRaw(item: IStockItem, {'Global Quote': raw}: RawStockItem): IStockItem {
 
-    //ОБНОВИТЬ ТО ТОЛЬКО НАДО ЦЕНУ И ПРОЦЕНТ
     //была идея хранить в рублях, но это не так нужно, ведь нам нужно переводить валюты только при сумме
     let result: IStockItem = {
         ...item,
@@ -37,5 +36,3 @@ export function combineSearchAndItem(searchMarch: RawSearchMatch, {'Global Quote
 
     return stockItem;
 }
-
-//todo:  конвертер из сырого в нет или не надо хз

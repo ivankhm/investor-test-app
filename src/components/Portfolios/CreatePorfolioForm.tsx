@@ -38,7 +38,6 @@ const CreatePorfolioForm: FC = () => {
                         value={portfolioName}
                         onChange={e => setPortfolioName(e.target.value)}
                     />
-
                 </Grid>
                 <Grid item>
                     <Button disabled={isFetchingGlobal} onClick={onSumbmit} variant="contained" size="medium" color="primary">Создать</Button>

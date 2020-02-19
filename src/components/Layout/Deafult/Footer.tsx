@@ -26,7 +26,7 @@ const createLink = (title: string, link: string) => {
 }
 
 export default function Footer(props: IFooterProps) {
-
+  //Не самое элегантное решение, возможно стоило захардкодить
   const links = [
     createLink('react', 'github.com/facebook/react'),
     createLink('redux', 'github.com/reduxjs/redux'),
@@ -41,7 +41,7 @@ export default function Footer(props: IFooterProps) {
       <Container maxWidth="md">
         <Typography variant="body1">
           Это сделал Иван Хмелевский с помощью: {' '}
-            {
+          {
             links.map(
               (l, i: number) => {
                 return (<React.Fragment key={i}>

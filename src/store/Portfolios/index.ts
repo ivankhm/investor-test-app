@@ -75,7 +75,6 @@ const portfoliosSlice = createSlice({
             const oldItemIndex = savedItems.findIndex(v => v.symbol === rawItem["Global Quote"]["01. symbol"]);
             let newStockItem = updateStockItemFromRaw(savedItems[oldItemIndex], rawItem)
             savedItems[oldItemIndex] = endFetching(newStockItem);;
-
         },
 
         recieveStockItemError(state, { payload }: PayloadAction<{ error: string, symbol: string }>) {
@@ -106,7 +105,6 @@ const portfoliosSlice = createSlice({
         },
 
         receiveApiError(state, { payload: apiLastError }: PayloadAction<string>) {
-            //console.log('receiveapierror', apiLastError);
             const portfolioSate = getSelectedPortfolio(state);
 
             portfolioSate.apiLastError = apiLastError;
@@ -129,15 +127,6 @@ const { actions, reducer } = portfoliosSlice;
 
 export const { abortUpdatig, recieveStockItemError, receiveApiError, createPortfolio, selectCurrentPortfolio, saveStockItem, recieveStockItemUpdate, requestPortfolioUpdate, receivePortfolioUpdate } = actions;
 
-//для тестирования онли
-// async function delay(delayInms: number) {
-//     return new Promise(resolve => {
-//         setTimeout(() => {
-//             resolve(2);
-//         }, delayInms);
-//     });
-// }
-
 export function wrongDataErrorMessage(data: any, symbol: string) {
     return `Не удалось привести тип ${typeof data} к RawStockItem для символа ${symbol}. 
             Сырой объект data: ${JSON.stringify(data)}`;
@@ -157,23 +146,17 @@ export const fetchCurrentPortfolio = (): AppThunk<Promise<void>> =>
         const stockItemsRequests = savedItems
             .map(async ({ symbol }) => {
 
-                //tsting
-                //await delay(2000 + Math.random() * 2000);
-
                 try {
                     const { data } = await getQuoteEndpoint(symbol);
 
                     const warning = data as WarningResult;
                     const result = data as RawStockItem;
 
-                    //console.log('updated: ', data);
-
                     if (warning.Note) {
                         throw warning.Note;
                     }
 
-                    if (!result["Global Quote"]) {
-                        
+                    if (!result["Global Quote"]) { 
                         throw wrongDataErrorMessage(data, symbol);
                     }
 
@@ -187,11 +170,11 @@ export const fetchCurrentPortfolio = (): AppThunk<Promise<void>> =>
             });
 
         //Обновлять каждый:
-        //+: красиво, 
-        //-: каждый раз пересоздается весь массив ватафак
+        //+: красиво, медленее 
+        //-: каждый раз пересоздается весь массив
 
         //Обновлять все:
-        //+: одно изменение массива
+        //+: одно изменение массива, быстрее
         //-: безполезное свойство isFetching, пользователю меньше фидбека
 
         //ждем когда все обновятся

@@ -24,7 +24,6 @@ const ErrorMessage: React.FC<IErrorMessageProps> = (props) => {
 
     return (
         <Collapse collapsedHeight={0} in={openError}>
-
             <Alert
                 className={props.className}
                 severity="error"

@@ -10,8 +10,6 @@ interface IDataBlockProps {
 }
 
 const DataBlock: React.FunctionComponent<IDataBlockProps> = (props) => {
-    
-
     return (
         <div className={props.className}>
             <Typography color={props.color} variant="overline" display="block" gutterBottom>

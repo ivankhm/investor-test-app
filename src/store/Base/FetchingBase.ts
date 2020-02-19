@@ -1,3 +1,8 @@
+/**
+ * Фунции одновременно и мутируют state, и возврощают новый.
+ * Используется только внутри функций с immer, поэтому это допустимо
+ */
+
 export interface IFetchingBase {
     isFetching: boolean,
     didInvalidate: boolean,

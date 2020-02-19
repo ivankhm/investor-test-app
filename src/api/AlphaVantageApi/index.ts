@@ -2,14 +2,13 @@
 import axios from 'axios'
 import { ApiParams, GlobalQuoteParams, SymbolSearchParams, SymbolSearchResult, GlobalQuoteResult } from './types';
 
-
+//Возможно не самая лучшая идея возвращать секртный ключ из модуля.
 export const config = {
     apikey: '39LS35EIWF828AET',
     apiRoot: 'https://www.alphavantage.co/query'
 }
 
 function executeFuntion<T>(params: ApiParams) {
-    //хз
     params.apikey = config.apikey;
     return axios.get<T>(config.apiRoot, { params });
 }

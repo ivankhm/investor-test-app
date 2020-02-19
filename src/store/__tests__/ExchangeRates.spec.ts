@@ -121,8 +121,6 @@ describe('ExchangeRates reducer', () => {
             });
 
             return store.dispatch(fetchExchangeRates()).then(() => {
-                //console.log(mockAxios.history);
-
                 expect(store.getActions()).toEqual(expectedActions);
             })
         })
@@ -141,8 +139,7 @@ describe('ExchangeRates reducer', () => {
                 .replyOnce(200, data);
 
             const errorMock = `Ожидалисть обменные курсы, получено: ${JSON.stringify(data)}`;
-            //console.log(errorMock);
-
+            
             const expectedActions = [requestRates(), reciveError(errorMock)];
             const store = mockStore({
                 portfolios: portfoliosInitialState,
@@ -161,8 +158,7 @@ describe('ExchangeRates reducer', () => {
                 .networkErrorOnce();
 
             const errorMock = Error('Network Error').toString();
-            //console.log(errorMock);
-
+            
             const expectedActions = [requestRates(), reciveError(errorMock)];
             const store = mockStore({
                 portfolios: portfoliosInitialState,

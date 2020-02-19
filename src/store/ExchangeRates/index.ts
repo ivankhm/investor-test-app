@@ -57,7 +57,6 @@ export const { reciveError, requestRates, reciveRates } = actions;
 
 export const exchangeRatesReducer = reducer;
 
-
 export const fetchExchangeRates =
     (): AppThunk<Promise<void>> =>
         async (dispatch, getState) => {

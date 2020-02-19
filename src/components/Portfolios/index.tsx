@@ -25,20 +25,15 @@ const Portfolios: FC = () => {
     }, [dispatch]);
 
     return (
-
-
         <Grid
             container
             direction="column"
             justify="center"
             spacing={2}
         >
-
             <Grid item>
                 <CreatePorfolioForm />
             </Grid>
-
-
             {list.length === 0 ? (
                 <Grid item>
                     <Alert>
@@ -67,10 +62,8 @@ const Portfolios: FC = () => {
                         <Grid item>
                             <SelectedPortfolio />
                         </Grid>
-
                     </>
                 )}
-
         </Grid>
     )
 }

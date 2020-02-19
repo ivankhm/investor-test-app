@@ -3,7 +3,6 @@ export type ApiFunction = 'GLOBAL_QUOTE' | 'SYMBOL_SEARCH';
 export interface IApiParams {
     function: ApiFunction,
     apikey: string
-    //datatype?: 'json' | 'csv'
 }
 
 export interface GlobalQuoteParams extends IApiParams {
